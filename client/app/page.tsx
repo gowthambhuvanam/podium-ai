@@ -3,185 +3,163 @@
 import { useRouter } from 'next/navigation';
 
 const agents = [
-  { name: 'Participant', desc: 'Debates as an active human-like debater', color: 'agent-participant', border: 'border-indigo-500/30', bg: 'bg-indigo-500/10' },
-  { name: "Devil's Advocate", desc: 'Challenges the winning side to keep balance', color: 'agent-devils_advocate', border: 'border-red-500/30', bg: 'bg-red-500/10' },
-  { name: 'Interrogator', desc: 'Asks sharp Socratic questions only', color: 'agent-interrogator', border: 'border-yellow-500/30', bg: 'bg-yellow-500/10' },
-  { name: 'Coach', desc: 'Whispers private tactics to your side', color: 'agent-coach', border: 'border-orange-500/30', bg: 'bg-orange-500/10' },
-  { name: 'Steelman', desc: 'Builds the strongest version of weak arguments', color: 'agent-steelman', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10' },
-  { name: 'Judge', desc: 'Observes silently and delivers the final verdict', color: 'agent-judge', border: 'border-purple-500/30', bg: 'bg-purple-500/10' },
-];
-
-const stats = [
-  { value: '3', label: 'Debate Modes' },
-  { value: '6', label: 'AI Agents' },
-  { value: '10', label: 'Max Participants' },
-  { value: '100%', label: 'Real-time' },
+  { name: 'Participant', desc: 'Debates as an active member on one side', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.25)' },
+  { name: "Devil's Advocate", desc: 'Challenges whichever side is winning', color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)' },
+  { name: 'Interrogator', desc: 'Only asks sharp probing questions', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
+  { name: 'Coach', desc: 'Whispers private tactics to your side only', color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.25)' },
+  { name: 'Steelman', desc: 'Builds the strongest version of weak arguments', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)' },
+  { name: 'Judge', desc: 'Silent observer. Delivers the final verdict.', color: '#c084fc', bg: 'rgba(192,132,252,0.08)', border: 'rgba(192,132,252,0.25)' },
 ];
 
 const steps = [
-  { num: '01', title: 'Set the stage', desc: 'Enter any topic. AI sharpens it into a clear proposition and predicts how the room will lean.' },
-  { num: '02', title: 'Choose your agents', desc: 'Select one or all six AI roles. Each runs simultaneously — coaching, interrogating, arguing, judging.' },
-  { num: '03', title: 'Debate live', desc: 'Every argument is analyzed in real time. Fallacies flagged. Momentum tracked. Coach whispering in your ear.' },
-  { num: '04', title: 'Get your verdict', desc: 'Full performance breakdown. Who won, why, what you missed, and what to do better next time.' },
+  { num: '01', title: 'Set the stage', desc: 'Enter any topic. AI sharpens it and predicts how the room will lean.' },
+  { num: '02', title: 'Pick your agents', desc: 'Choose one or all six AI roles. Each runs simultaneously with its own job.' },
+  { num: '03', title: 'Debate live', desc: 'Arguments analyzed in real time. Fallacies flagged. Momentum tracked.' },
+  { num: '04', title: 'Get your verdict', desc: 'Full performance breakdown — who won, why, what you missed.' },
 ];
 
 export default function HomePage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-[#08080f] text-white overflow-x-hidden">
+    <div style={{ background: '#09090f', minHeight: '100vh', color: '#fff', fontFamily: 'inherit' }}>
 
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#08080f]/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="text-lg font-black tracking-tight text-white">PODIUM</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push('/auth/login')}
-              className="px-4 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => router.push('/auth/signup')}
-              className="px-4 py-1.5 text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors"
-            >
-              Get started
-            </button>
-          </div>
+      {/* NAV */}
+      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 32px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'rgba(9,9,15,0.95)', backdropFilter: 'blur(12px)', zIndex: 100 }}>
+        <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>PODIUM</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button onClick={() => router.push('/auth/login')} style={{ padding: '8px 16px', fontSize: '13px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Sign in
+          </button>
+          <button onClick={() => router.push('/auth/signup')} style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 700, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '10px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Get started
+          </button>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative min-h-screen flex items-center justify-center px-6 grid-bg pt-14">
-        {/* Gradient orbs */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-green-500/8 rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-red-500/8 rounded-full blur-[80px] pointer-events-none" />
+      {/* HERO */}
+      <section style={{ padding: '80px 24px 80px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Background glow */}
+        <div style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%,-50%)', width: '600px', height: '400px', background: 'radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        <div className="relative max-w-4xl mx-auto text-center">
-          {/* FOR vs AGAINST pill */}
-          <div className="inline-flex items-center gap-3 bg-white/[0.04] border border-white/[0.08] rounded-full px-4 py-1.5 mb-8">
-            <span className="text-xs font-bold text-green-400 tracking-widest">FOR</span>
-            <span className="w-px h-3 bg-white/20" />
-            <span className="text-xs font-medium text-gray-400">AI-Powered Debate Platform</span>
-            <span className="w-px h-3 bg-white/20" />
-            <span className="text-xs font-bold text-red-400 tracking-widest">AGAINST</span>
+        <div style={{ position: 'relative', maxWidth: '800px', margin: '0 auto' }}>
+          {/* Pill */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '999px', padding: '6px 16px', marginBottom: '32px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#4ade80', letterSpacing: '2px' }}>FOR</span>
+            <span style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.15)' }} />
+            <span style={{ fontSize: '11px', color: '#6b7280' }}>AI-Powered Debate Platform</span>
+            <span style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.15)' }} />
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#f87171', letterSpacing: '2px' }}>AGAINST</span>
           </div>
 
-          <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-none mb-6">
-            <span className="gradient-text">THE ARENA FOR</span>
-            <br />
-            <span className="text-white">INTELLIGENT</span>
-            <br />
-            <span className="gradient-text">DEBATE</span>
+          {/* Headline */}
+          <h1 style={{ fontSize: 'clamp(48px, 8vw, 88px)', fontWeight: 900, lineHeight: 1.0, letterSpacing: '-3px', marginBottom: '24px', color: '#ffffff' }}>
+            THE ARENA FOR<br />
+            <span style={{ color: '#818cf8' }}>INTELLIGENT</span><br />
+            DEBATE
           </h1>
 
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
-            Real-time debates with six AI agents that argue, coach, interrogate, and judge.
-            Solo, 1v1, or group — with live fallacy detection and performance analysis.
+          <p style={{ fontSize: '18px', color: '#6b7280', maxWidth: '560px', margin: '0 auto 40px', lineHeight: 1.7 }}>
+            Real-time AI debate with six simultaneous agents — arguing, coaching, interrogating, and judging. Solo, 1v1, or up to 10 people.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-20">
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '64px' }}>
             <button
               onClick={() => router.push('/auth/signup')}
-              className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 font-bold text-base rounded-xl transition-all glow-indigo"
+              style={{ padding: '14px 32px', fontSize: '15px', fontWeight: 800, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 0 32px rgba(99,102,241,0.4)' }}
             >
               Enter the Arena
             </button>
             <button
               onClick={() => router.push('/debate/create')}
-              className="px-8 py-3.5 border border-white/10 hover:border-white/20 bg-white/[0.04] hover:bg-white/[0.07] font-semibold text-base rounded-xl transition-all text-gray-300"
+              style={{ padding: '14px 32px', fontSize: '15px', fontWeight: 700, color: '#d1d5db', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               Create a Debate
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-            {stats.map(s => (
-              <div key={s.label} className="bg-white/[0.03] border border-white/[0.07] rounded-xl py-4 px-2">
-                <div className="text-3xl font-black text-white mb-1">{s.value}</div>
-                <div className="text-xs text-gray-500 font-medium">{s.label}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', maxWidth: '560px', margin: '0 auto' }}>
+            {[['3', 'Debate Modes'], ['6', 'AI Agents'], ['10', 'Max Players'], ['100%', 'Real-time']].map(([val, label]) => (
+              <div key={label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{val}</div>
+                <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px', fontWeight: 500 }}>{label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* AI Agents section */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-indigo-400 text-xs font-bold tracking-widest uppercase mb-3">Six AI Roles</p>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight">Your AI Debate Squad</h2>
-            <p className="text-gray-500 mt-4 max-w-xl mx-auto">Select one or combine all six. Each agent runs simultaneously with its own job.</p>
+      {/* AI AGENTS */}
+      <section style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#6366f1', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>Six AI Roles</p>
+            <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, letterSpacing: '-2px', color: '#fff' }}>Your AI Debate Squad</h2>
+            <p style={{ color: '#4b5563', marginTop: '12px', fontSize: '15px' }}>Select one or combine all six. Each runs simultaneously with its own job.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {agents.map(a => (
-              <div key={a.name} className={`${a.bg} border ${a.border} rounded-2xl p-5 card-hover cursor-default`}>
-                <h3 className={`font-bold text-base mb-2 ${a.color}`}>{a.name}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{a.desc}</p>
+              <div key={a.name} style={{ background: a.bg, border: `1px solid ${a.border}`, borderRadius: '18px', padding: '24px' }}>
+                <h3 style={{ fontWeight: 800, fontSize: '15px', color: a.color, marginBottom: '8px' }}>{a.name}</h3>
+                <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.6 }}>{a.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-24 px-6 border-t border-white/[0.06]">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-indigo-400 text-xs font-bold tracking-widest uppercase mb-3">How it works</p>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight">From Topic to Verdict</h2>
+      {/* HOW IT WORKS */}
+      <section style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#6366f1', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>How it works</p>
+            <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, letterSpacing: '-2px', color: '#fff' }}>From Topic to Verdict</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '12px' }}>
             {steps.map(s => (
-              <div key={s.num} className="bg-white/[0.02] border border-white/[0.07] rounded-2xl p-6 card-hover">
-                <span className="text-5xl font-black text-white/[0.06] block mb-4 leading-none">{s.num}</span>
-                <h3 className="font-bold text-lg text-white mb-2">{s.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
+              <div key={s.num} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '28px' }}>
+                <span style={{ fontSize: '48px', fontWeight: 900, color: 'rgba(255,255,255,0.05)', lineHeight: 1, display: 'block', marginBottom: '16px' }}>{s.num}</span>
+                <h3 style={{ fontWeight: 800, fontSize: '17px', color: '#fff', marginBottom: '8px' }}>{s.title}</h3>
+                <p style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.7 }}>{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* VS section — FOR vs AGAINST visual */}
-      <section className="py-24 px-6 border-t border-white/[0.06] relative overflow-hidden">
-        <div className="absolute inset-0 grid-bg opacity-40" />
-        <div className="relative max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-white/[0.08]">
-            <div className="bg-green-500/10 border-r border-white/[0.08] p-10 text-center">
-              <div className="text-5xl font-black gradient-text-for mb-3">FOR</div>
-              <p className="text-gray-400 text-sm">Make your case. Back it with evidence. Change minds.</p>
+      {/* FOR vs AGAINST */}
+      <section style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '40px' }}>
+            <div style={{ background: 'rgba(34,197,94,0.08)', padding: '40px 32px', textAlign: 'center', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: '52px', fontWeight: 900, color: '#22c55e', letterSpacing: '-2px', marginBottom: '12px' }}>FOR</div>
+              <p style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>Make your case. Back it with evidence. Change minds.</p>
             </div>
-            <div className="bg-red-500/10 p-10 text-center">
-              <div className="text-5xl font-black gradient-text-against mb-3">AGAINST</div>
-              <p className="text-gray-400 text-sm">Challenge assumptions. Expose weak logic. Win the room.</p>
+            <div style={{ background: 'rgba(239,68,68,0.08)', padding: '40px 32px', textAlign: 'center' }}>
+              <div style={{ fontSize: '52px', fontWeight: 900, color: '#ef4444', letterSpacing: '-2px', marginBottom: '12px' }}>AGAINST</div>
+              <p style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.6 }}>Challenge assumptions. Expose weak logic. Win the room.</p>
             </div>
           </div>
-          <div className="text-center mt-10">
-            <p className="text-gray-600 text-sm mb-6">Suitable for university debate clubs, corporate training, and competitive debaters</p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '13px', color: '#374151', marginBottom: '24px' }}>Built for university debate clubs, corporate training, and competitive debaters</p>
             <button
               onClick={() => router.push('/auth/signup')}
-              className="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 font-black text-lg rounded-xl transition-all glow-indigo"
+              style={{ padding: '16px 40px', fontSize: '16px', fontWeight: 900, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 0 40px rgba(99,102,241,0.4)' }}
             >
               Start Debating Free
             </button>
-            <p className="text-gray-600 text-xs mt-3">10 free credits on signup. No card required.</p>
+            <p style={{ fontSize: '12px', color: '#374151', marginTop: '12px' }}>10 free credits on signup. No card required.</p>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="text-lg font-black text-white/40">PODIUM</span>
-          <p className="text-gray-700 text-xs">AI analysis only. Not affiliated with any institution.</p>
-        </div>
+      {/* FOOTER */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '16px', fontWeight: 900, color: 'rgba(255,255,255,0.2)' }}>PODIUM</span>
+        <p style={{ fontSize: '12px', color: '#1f2937' }}>AI analysis only. Not affiliated with any institution.</p>
       </footer>
 
-    </main>
+    </div>
   );
 }

@@ -24,74 +24,67 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <main className="min-h-screen bg-[#08080f] grid-bg flex items-center justify-center px-4 relative">
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+  const inputStyle = {
+    width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '12px', padding: '12px 16px', color: '#fff', fontSize: '14px',
+    outline: 'none', fontFamily: 'inherit',
+  };
 
-      <div className="relative w-full max-w-md">
-        <button onClick={() => router.push('/')} className="block text-center mb-8">
-          <span className="text-2xl font-black tracking-tight text-white">PODIUM</span>
+  const labelStyle = { display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', letterSpacing: '1.5px', textTransform: 'uppercase' as const, marginBottom: '8px' };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', position: 'relative' }}>
+      <div style={{ position: 'fixed', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: '500px', height: '500px', background: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      <div style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
+        <button onClick={() => router.push('/')} style={{ display: 'block', width: '100%', textAlign: 'center', marginBottom: '32px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <span style={{ fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>PODIUM</span>
         </button>
 
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8">
-          <h1 className="text-2xl font-black mb-1 text-white">Welcome back</h1>
-          <p className="text-gray-500 text-sm mb-6">Sign in to your Podium account</p>
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#fff', marginBottom: '4px', letterSpacing: '-0.5px' }}>Welcome back</h1>
+          <p style={{ fontSize: '13px', color: '#4b5563', marginBottom: '28px' }}>Sign in to your Podium account</p>
 
           {error && (
-            <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', padding: '12px 16px', color: '#f87171', fontSize: '13px', marginBottom: '20px' }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email</label>
-              <input
-                type="email"
-                required
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
-                placeholder="you@example.com"
-              />
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={labelStyle}>Email</label>
+              <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} style={inputStyle} placeholder="you@example.com" />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Password</label>
-              <input
-                type="password"
-                required
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
-                placeholder="Your password"
-              />
+            <div style={{ marginBottom: '24px' }}>
+              <label style={labelStyle}>Password</label>
+              <input type="password" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} style={inputStyle} placeholder="Your password" />
             </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold py-3 rounded-xl transition-all text-sm glow-indigo"
+              style={{ width: '100%', padding: '14px', fontSize: '14px', fontWeight: 800, color: '#fff', background: loading ? '#4f46e5' : '#6366f1', border: 'none', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: '0 0 24px rgba(99,102,241,0.35)' }}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-white/[0.06] text-center">
-            <p className="text-gray-600 text-sm">
+          <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
+            <p style={{ fontSize: '13px', color: '#4b5563' }}>
               No account?{' '}
-              <button onClick={() => router.push('/auth/signup')} className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+              <button onClick={() => router.push('/auth/signup')} style={{ color: '#818cf8', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '13px' }}>
                 Sign up free
               </button>
             </p>
           </div>
         </div>
 
-        <div className="flex justify-center gap-6 mt-6">
-          <span className="text-xs font-bold text-green-500/40 tracking-widest">FOR</span>
-          <span className="text-xs text-gray-700">vs</span>
-          <span className="text-xs font-bold text-red-500/40 tracking-widest">AGAINST</span>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '24px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(74,222,128,0.3)', letterSpacing: '2px' }}>FOR</span>
+          <span style={{ fontSize: '11px', color: '#1f2937' }}>vs</span>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(248,113,113,0.3)', letterSpacing: '2px' }}>AGAINST</span>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

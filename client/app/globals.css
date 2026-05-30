@@ -1,127 +1,22 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #08080f;
-  --surface: #0f0f1a;
-  --surface2: #14141f;
-  --surface3: #1a1a28;
-  --border: rgba(255,255,255,0.07);
-  --border-bright: rgba(255,255,255,0.14);
-  --accent: #6366f1;
-  --accent-bright: #818cf8;
-  --for: #22c55e;
-  --for-dim: rgba(34,197,94,0.12);
-  --against: #ef4444;
-  --against-dim: rgba(239,68,68,0.12);
-  --text: #ffffff;
-  --text-2: #c4c4d4;
-  --muted: #6b6b85;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { height: 100%; }
+html, body {
+  height: 100%;
+}
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #09090f;
+  color: #ffffff;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
-  min-height: 100%;
 }
 
-/* Grid background pattern */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* Glow effects */
-.glow-indigo {
-  box-shadow: 0 0 30px rgba(99,102,241,0.2), 0 0 60px rgba(99,102,241,0.08);
-}
-.glow-for {
-  box-shadow: 0 0 20px rgba(34,197,94,0.25);
-}
-.glow-against {
-  box-shadow: 0 0 20px rgba(239,68,68,0.25);
-}
-
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #ffffff 0%, #818cf8 50%, #6366f1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gradient-text-for {
-  background: linear-gradient(135deg, #4ade80, #22c55e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.gradient-text-against {
-  background: linear-gradient(135deg, #f87171, #ef4444);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Card hover */
-.card-hover {
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-}
-.card-hover:hover {
-  border-color: rgba(99,102,241,0.4);
-  box-shadow: 0 0 24px rgba(99,102,241,0.12);
-  transform: translateY(-1px);
-}
-
-/* Pulse dot */
-.pulse-dot {
-  animation: pulse-dot 2s infinite;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.3); }
-}
-
-/* Typing cursor */
-.typing-cursor::after {
-  content: '|';
-  animation: blink 1s infinite;
-  color: #6366f1;
-}
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* Momentum bar animation */
-.momentum-fill {
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-
-/* Agent colors */
-.agent-participant { color: #818cf8; }
-.agent-devils_advocate { color: #f87171; }
-.agent-interrogator { color: #fbbf24; }
-.agent-steelman { color: #34d399; }
-.agent-judge { color: #c084fc; }
-.agent-coach { color: #fb923c; }
-
-.agent-bg-participant { background: rgba(129,140,248,0.1); border-color: rgba(129,140,248,0.2); }
-.agent-bg-devils_advocate { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); }
-.agent-bg-interrogator { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.2); }
-.agent-bg-steelman { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.2); }
-.agent-bg-judge { background: rgba(192,132,252,0.1); border-color: rgba(192,132,252,0.2); }
-.agent-bg-coach { background: rgba(251,146,60,0.1); border-color: rgba(251,146,60,0.2); }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
