@@ -25,62 +25,85 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Join Podium</h1>
-          <p className="text-gray-400 text-sm">Start debating with AI today</p>
-        </div>
-        <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-          {error && <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded-lg px-3 py-2">{error}</p>}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
-            <input
-              type="text"
-              required
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
-              placeholder="Your name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-            <input
-              type="password"
-              required
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
-              placeholder="Min 6 characters"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition text-sm"
-          >
-            {loading ? 'Creating account...' : 'Create account'}
-          </button>
-          <p className="text-center text-sm text-gray-500">
-            Already have an account?{' '}
-            <button type="button" onClick={() => router.push('/auth/login')} className="text-indigo-400 hover:text-indigo-300">
-              Sign in
+    <main className="min-h-screen bg-[#08080f] grid-bg flex items-center justify-center px-4 relative">
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative w-full max-w-md">
+        {/* Logo */}
+        <button onClick={() => router.push('/')} className="block text-center mb-8">
+          <span className="text-2xl font-black tracking-tight text-white">PODIUM</span>
+        </button>
+
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8">
+          <h1 className="text-2xl font-black mb-1 text-white">Enter the Arena</h1>
+          <p className="text-gray-500 text-sm mb-6">Create your account. 10 free credits included.</p>
+
+          {error && (
+            <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Name</label>
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
+                placeholder="Your name"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email</label>
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Password</label>
+              <input
+                type="password"
+                required
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
+                placeholder="Min 6 characters"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold py-3 rounded-xl transition-all text-sm glow-indigo"
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
-          </p>
-        </form>
-        <p className="text-center text-xs text-gray-600 mt-4">10 free debate credits included on signup</p>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-white/[0.06] text-center">
+            <p className="text-gray-600 text-sm">
+              Already have an account?{' '}
+              <button onClick={() => router.push('/auth/login')} className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+                Sign in
+              </button>
+            </p>
+          </div>
+        </div>
+
+        {/* FOR vs AGAINST decorative */}
+        <div className="flex justify-center gap-6 mt-6">
+          <span className="text-xs font-bold text-green-500/40 tracking-widest">FOR</span>
+          <span className="text-xs text-gray-700">vs</span>
+          <span className="text-xs font-bold text-red-500/40 tracking-widest">AGAINST</span>
+        </div>
       </div>
     </main>
   );

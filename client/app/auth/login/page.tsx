@@ -25,49 +25,72 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Welcome back</h1>
-          <p className="text-gray-400 text-sm">Sign in to your Podium account</p>
-        </div>
-        <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-          {error && <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded-lg px-3 py-2">{error}</p>}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
-            <input
-              type="password"
-              required
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition text-sm"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-          <p className="text-center text-sm text-gray-500">
-            No account?{' '}
-            <button type="button" onClick={() => router.push('/auth/signup')} className="text-indigo-400 hover:text-indigo-300">
-              Sign up free
+    <main className="min-h-screen bg-[#08080f] grid-bg flex items-center justify-center px-4 relative">
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative w-full max-w-md">
+        <button onClick={() => router.push('/')} className="block text-center mb-8">
+          <span className="text-2xl font-black tracking-tight text-white">PODIUM</span>
+        </button>
+
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8">
+          <h1 className="text-2xl font-black mb-1 text-white">Welcome back</h1>
+          <p className="text-gray-500 text-sm mb-6">Sign in to your Podium account</p>
+
+          {error && (
+            <div className="mb-4 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email</label>
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Password</label>
+              <input
+                type="password"
+                required
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors placeholder-gray-600"
+                placeholder="Your password"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed font-bold py-3 rounded-xl transition-all text-sm glow-indigo"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
-          </p>
-        </form>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-white/[0.06] text-center">
+            <p className="text-gray-600 text-sm">
+              No account?{' '}
+              <button onClick={() => router.push('/auth/signup')} className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors">
+                Sign up free
+              </button>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-6 mt-6">
+          <span className="text-xs font-bold text-green-500/40 tracking-widest">FOR</span>
+          <span className="text-xs text-gray-700">vs</span>
+          <span className="text-xs font-bold text-red-500/40 tracking-widest">AGAINST</span>
+        </div>
       </div>
     </main>
   );
