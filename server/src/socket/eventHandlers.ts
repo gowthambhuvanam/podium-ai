@@ -34,6 +34,17 @@ export function registerEventHandlers(io: Server, socket: Socket) {
       // Add participant if not already in room
       const existing = room.participants.find(p => p.user_id === user_id);
       if (!existing) {
+        // Enforce human participant caps by mode: solo = 1, 1v1 = 2, group = 10
+        const humanCount = room.participants.filter(p => !p.is_ai).length;
+        const cap = room.mode === 'solo' ? 1 : room.mode === '1v1' ? 2 : 10;
+        if (humanCount >= cap) {
+          socket.emit('error', {
+            message: room.mode === '1v1'
+              ? 'This 1v1 debate already has two participants.'
+              : `This debate room is full (max ${cap} participants).`,
+          });
+          return;
+        }
         room.participants.push({
           id: uuidv4(),
           user_id,

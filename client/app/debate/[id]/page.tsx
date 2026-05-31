@@ -67,6 +67,7 @@ export default function DebateRoomPage() {
   const [fallacyAlerts, setFallacyAlerts] = useState<FallacyAlert[]>([]);
   const [topic, setTopic] = useState('');
   const [sharpenedTopic, setSharpenedTopic] = useState('');
+  const [debateMode, setDebateMode] = useState<'solo' | '1v1' | 'group'>('solo');
   const [connected, setConnected] = useState(false);
   const [roomLink, setRoomLink] = useState('');
   const [copied, setCopied] = useState(false);
@@ -98,10 +99,12 @@ export default function DebateRoomPage() {
     const socket = socketRef.current;
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
+    socket.on('error', ({ message }: { message: string }) => alert(message));
 
-    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; messages?: Message[]; momentum?: Momentum } }) => {
+    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; mode?: 'solo' | '1v1' | 'group'; messages?: Message[]; momentum?: Momentum } }) => {
       setTopic(room.topic);
       setSharpenedTopic(room.sharpened_topic || room.topic);
+      if (room.mode) setDebateMode(room.mode);
       // Load any messages already in the room (for people who join mid-debate)
       if (room.messages && room.messages.length > 0) setMessages(room.messages);
       if (room.momentum) setMomentum(room.momentum);
@@ -142,7 +145,7 @@ export default function DebateRoomPage() {
     if (stance) joinRoom(stance);
 
     return () => {
-      ['connect','disconnect','room_joined','new_message','ai_chunk','ai_message_complete',
+      ['connect','disconnect','error','room_joined','new_message','ai_chunk','ai_message_complete',
        'momentum_update','fallacy_detected','coach_whisper','debate_started','debate_ended']
         .forEach(e => socket.off(e));
       disconnectSocket();
@@ -395,21 +398,34 @@ export default function DebateRoomPage() {
               </div>
             )}
 
-            {/* Invite link */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', fontWeight: 600 }}>
-                Invite opponents — share this link (they will join the {stance === 'for' ? 'AGAINST' : 'FOR'} side)
-              </p>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input readOnly value={roomLink + `?stance=${stance === 'for' ? 'against' : 'for'}&name=Opponent&user_id=guest`}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px 14px', color: '#6b7280', fontSize: '12px', outline: 'none', fontFamily: 'inherit' }}
-                />
-                <button onClick={copyLink}
-                  style={{ padding: '10px 16px', background: copied ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: copied ? '#22c55e' : '#9ca3af', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
+            {/* Invite link — only for multi-human modes, not solo */}
+            {debateMode !== 'solo' && (
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
+                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', fontWeight: 600 }}>
+                  {debateMode === '1v1'
+                    ? `Invite your opponent — they will join the ${stance === 'for' ? 'AGAINST' : 'FOR'} side`
+                    : 'Invite participants — share this link (up to 10 people can join this room)'}
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input readOnly value={roomLink + `?stance=${stance === 'for' ? 'against' : 'for'}&name=Opponent&user_id=guest`}
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px 14px', color: '#6b7280', fontSize: '12px', outline: 'none', fontFamily: 'inherit' }}
+                  />
+                  <button onClick={copyLink}
+                    style={{ padding: '10px 16px', background: copied ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: copied ? '#22c55e' : '#9ca3af', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Solo: reassure no invite needed */}
+            {debateMode === 'solo' && (
+              <div style={{ background: 'rgba(129,140,248,0.06)', border: '1px solid rgba(129,140,248,0.15)', borderRadius: '14px', padding: '14px 16px', marginBottom: '20px' }}>
+                <p style={{ fontSize: '12px', color: '#818cf8', fontWeight: 600 }}>
+                  You will debate the AI one-on-one. Press start when you are ready.
+                </p>
+              </div>
+            )}
 
             <button onClick={startDebate}
               style={{ width: '100%', padding: '16px', fontSize: '15px', fontWeight: 900, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 0 32px rgba(99,102,241,0.35)', letterSpacing: '0.5px' }}>
