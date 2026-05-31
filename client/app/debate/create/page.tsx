@@ -69,6 +69,17 @@ export default function CreateDebatePage() {
   const [activeCategory, setActiveCategory] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggesting, setSuggesting] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
+
+  const pickSuggestion = (s: string) => {
+    setTopic(s);
+    setSelectedSuggestion(s);
+  };
+
+  const writeOwn = () => {
+    setSelectedSuggestion(null);
+    setTopic('');
+  };
 
   const loadSuggestions = async (category: string) => {
     setActiveCategory(category);
@@ -150,14 +161,35 @@ export default function CreateDebatePage() {
         {/* Topic */}
         <div style={{ marginBottom: '32px' }}>
           <label style={sectionLabel}>Debate Topic</label>
-          <textarea
-            value={topic}
-            onChange={e => setTopic(e.target.value)}
-            rows={2}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '16px', color: '#fff', fontSize: '15px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.6 }}
-            placeholder="e.g. Remote work kills workplace culture"
-          />
-          <p style={{ fontSize: '12px', color: '#374151', marginTop: '6px' }}>AI will sharpen this into a clear arguable proposition</p>
+
+          {/* Free-text box — hidden once a suggestion is chosen */}
+          {!selectedSuggestion && (
+            <>
+              <textarea
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                rows={2}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '16px', color: '#fff', fontSize: '15px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.6 }}
+                placeholder="e.g. Remote work kills workplace culture"
+              />
+              <p style={{ fontSize: '12px', color: '#374151', marginTop: '6px' }}>AI will sharpen this into a clear arguable proposition</p>
+            </>
+          )}
+
+          {/* Chosen suggestion — shown highlighted instead of the text box */}
+          {selectedSuggestion && (
+            <div style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.45)', borderRadius: '14px', padding: '16px', boxShadow: '0 0 20px rgba(99,102,241,0.12)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: 700, color: '#818cf8', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Selected Topic</p>
+                  <p style={{ fontSize: '15px', color: '#fff', lineHeight: 1.5 }}>{selectedSuggestion}</p>
+                </div>
+                <button onClick={writeOwn} style={{ flexShrink: 0, fontSize: '12px', fontWeight: 600, color: '#9ca3af', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  Write my own
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Topic suggestions */}
           <div style={{ marginTop: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '14px' }}>
@@ -186,15 +218,23 @@ export default function CreateDebatePage() {
 
             {suggestions.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
-                {suggestions.map((s, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setTopic(s)}
-                    style={{ textAlign: 'left', fontSize: '13px', color: '#d1d5db', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1.4 }}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {suggestions.map((s, i) => {
+                  const chosen = selectedSuggestion === s;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => pickSuggestion(s)}
+                      style={{ textAlign: 'left', fontSize: '13px', lineHeight: 1.4, borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit',
+                        color: chosen ? '#fff' : '#d1d5db',
+                        background: chosen ? 'rgba(99,102,241,0.18)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${chosen ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                        display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      {chosen && <span style={{ color: '#818cf8', fontWeight: 800, flexShrink: 0 }}>✓</span>}
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
