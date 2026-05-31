@@ -51,8 +51,9 @@ export default function DebateRoomPage() {
   const urlStance = searchParams.get('stance') || '';
   const urlName = searchParams.get('name') || 'Debater';
   const urlUserId = searchParams.get('user_id') || 'guest';
+  const isSpectator = searchParams.get('role') === 'spectator';
 
-  const [stage, setStage] = useState<Stage>(urlStance ? 'briefing' : 'pick-stance');
+  const [stage, setStage] = useState<Stage>(isSpectator ? 'active' : urlStance ? 'briefing' : 'pick-stance');
   const [stance, setStance] = useState(urlStance || '');
   const [userName] = useState(urlName);
   const [userId] = useState(urlUserId);
@@ -71,6 +72,7 @@ export default function DebateRoomPage() {
   const [connected, setConnected] = useState(false);
   const [roomLink, setRoomLink] = useState('');
   const [copied, setCopied] = useState(false);
+  const [specCopied, setSpecCopied] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [hoveredFallacy, setHoveredFallacy] = useState<string | null>(null);
 
@@ -92,8 +94,11 @@ export default function DebateRoomPage() {
   }, []);
 
   const joinRoom = useCallback((s: string) => {
-    socketRef.current.emit('join_room', { debate_id: debateId, user_id: userId, user_name: userName, stance: s });
-  }, [debateId, userId, userName]);
+    socketRef.current.emit('join_room', {
+      debate_id: debateId, user_id: userId, user_name: userName,
+      stance: s, role: isSpectator ? 'spectator' : 'participant',
+    });
+  }, [debateId, userId, userName, isSpectator]);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -108,6 +113,11 @@ export default function DebateRoomPage() {
       // Load any messages already in the room (for people who join mid-debate)
       if (room.messages && room.messages.length > 0) setMessages(room.messages);
       if (room.momentum) setMomentum(room.momentum);
+      // Spectators always go straight to the watch view, no briefing
+      if (isSpectator) {
+        setStage(room.status === 'completed' ? 'completed' : 'active');
+        return;
+      }
       // If the debate is already running, jump straight into it — do not get
       // stuck on the briefing screen (this was the 1v1 second-player bug)
       if (room.status === 'active') {
@@ -142,7 +152,7 @@ export default function DebateRoomPage() {
     socket.on('debate_started', () => setStage('active'));
     socket.on('debate_ended', ({ verdict: v }: { verdict: Verdict }) => { setVerdict(v); setStage('completed'); });
 
-    if (stance) joinRoom(stance);
+    if (isSpectator || stance) joinRoom(stance);
 
     return () => {
       ['connect','disconnect','error','room_joined','new_message','ai_chunk','ai_message_complete',
@@ -150,7 +160,7 @@ export default function DebateRoomPage() {
         .forEach(e => socket.off(e));
       disconnectSocket();
     };
-  }, [stance, joinRoom, loadBriefing]);
+  }, [stance, joinRoom, loadBriefing, isSpectator]);
 
   const handlePickStance = (s: string) => {
     setStance(s);
@@ -298,10 +308,16 @@ export default function DebateRoomPage() {
         <span style={{ fontSize: '10px', fontWeight: 800, color: '#4b5563', letterSpacing: '2px' }}>MOMENTUM — who is winning the room</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#22c55e' : '#ef4444', display: 'inline-block' }} />
-          <span style={{ fontSize: '11px', fontWeight: 800, color: stanceColor, background: `rgba(${stance === 'for' ? '34,197,94' : '239,68,68'},0.12)`, padding: '3px 10px', borderRadius: '999px' }}>
-            YOU: {stanceLabel}
-          </span>
-          {stage === 'active' && (
+          {isSpectator ? (
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#a5b4fc', background: 'rgba(129,140,248,0.12)', padding: '3px 10px', borderRadius: '999px' }}>
+              SPECTATOR
+            </span>
+          ) : (
+            <span style={{ fontSize: '11px', fontWeight: 800, color: stanceColor, background: `rgba(${stance === 'for' ? '34,197,94' : '239,68,68'},0.12)`, padding: '3px 10px', borderRadius: '999px' }}>
+              YOU: {stanceLabel}
+            </span>
+          )}
+          {stage === 'active' && !isSpectator && (
             <button onClick={endDebate} style={{ fontSize: '11px', fontWeight: 700, color: '#fca5a5', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>
               End Debate
             </button>
@@ -426,6 +442,22 @@ export default function DebateRoomPage() {
                 </p>
               </div>
             )}
+
+            {/* Spectator link — anyone can watch (supervisor / teacher / audience) */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', fontWeight: 600 }}>
+                Spectator link — share with anyone who should just watch (no limit)
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input readOnly value={roomLink + `?role=spectator&name=Spectator&user_id=guest`}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px 14px', color: '#6b7280', fontSize: '12px', outline: 'none', fontFamily: 'inherit' }}
+                />
+                <button onClick={() => { navigator.clipboard.writeText(roomLink + `?role=spectator&name=Spectator&user_id=guest`); setSpecCopied(true); setTimeout(() => setSpecCopied(false), 2000); }}
+                  style={{ padding: '10px 16px', background: specCopied ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: specCopied ? '#22c55e' : '#9ca3af', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                  {specCopied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
 
             <button onClick={startDebate}
               style={{ width: '100%', padding: '16px', fontSize: '15px', fontWeight: 900, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 0 32px rgba(99,102,241,0.35)', letterSpacing: '0.5px' }}>
@@ -565,7 +597,9 @@ export default function DebateRoomPage() {
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {messages.length === 0 && stage === 'active' && (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: '#374151', fontSize: '14px' }}>Make the first argument — the debate is live.</p>
+                <p style={{ color: '#374151', fontSize: '14px' }}>
+                  {isSpectator ? 'Waiting for the debate to begin... arguments will appear here live.' : 'Make the first argument — the debate is live.'}
+                </p>
               </div>
             )}
 
@@ -625,8 +659,17 @@ export default function DebateRoomPage() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* SPECTATOR FOOTER — watch only, no input */}
+          {stage === 'active' && isSpectator && (
+            <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '14px 16px', background: '#0d0d18', textAlign: 'center' }}>
+              <p style={{ fontSize: '12px', color: '#6b7280' }}>
+                <span style={{ color: '#a5b4fc', fontWeight: 700 }}>Spectator mode</span> — you are watching this debate live. You cannot send messages.
+              </p>
+            </div>
+          )}
+
           {/* INPUT */}
-          {stage === 'active' && (
+          {stage === 'active' && !isSpectator && (
             <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '14px 16px', background: '#0d0d18' }}>
               {coachTip && (
                 <div style={{ marginBottom: '10px', display: 'flex', gap: '10px', background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: '12px', padding: '10px 14px', alignItems: 'flex-start' }}>

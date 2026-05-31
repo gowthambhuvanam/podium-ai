@@ -21,13 +21,22 @@ const ROLE_LABELS: Record<AIRole, string> = {
 
 export function registerEventHandlers(io: Server, socket: Socket) {
   // Join debate room
-  socket.on('join_room', async ({ debate_id, user_id, user_name, stance }) => {
+  socket.on('join_room', async ({ debate_id, user_id, user_name, stance, role }) => {
     try {
       socket.join(debate_id);
 
       const room = getRoom(debate_id);
       if (!room) {
         socket.emit('error', { message: 'Room not found' });
+        return;
+      }
+
+      // Spectators only watch — they receive all broadcasts (they are in the
+      // socket room) but are NOT added as participants, do not count toward
+      // caps, and never affect momentum. Many spectators can watch at once.
+      if (role === 'spectator') {
+        socket.emit('room_joined', { room: getRoom(debate_id) });
+        console.log(`${user_name || 'A spectator'} is watching room ${debate_id}`);
         return;
       }
 
