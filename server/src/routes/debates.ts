@@ -6,6 +6,7 @@ import {
   sharpenTopic,
   predictStance,
   generateBriefing,
+  suggestTopics,
 } from '../ai/agentOrchestrator.js';
 import { DebateRoom, AIRole, DebateMode, SkillLevel, Stance } from '../types/index.js';
 
@@ -39,7 +40,9 @@ router.post('/create', async (req: Request, res: Response) => {
     // - 1v1: both sides are humans, so no AI Participant
     let safeRoles = Array.isArray(ai_roles) ? [...ai_roles] : [];
     if (mode === 'solo') {
-      safeRoles = safeRoles.filter(r => r !== 'devils_advocate');
+      // Devil's Advocate and Interrogator are redundant in solo — the AI
+      // participant already argues the opposite side and rebuts the human
+      safeRoles = safeRoles.filter(r => r !== 'devils_advocate' && r !== 'interrogator');
       if (!safeRoles.includes('participant')) safeRoles.push('participant');
     } else if (mode === '1v1') {
       safeRoles = safeRoles.filter(r => r !== 'participant');
@@ -97,6 +100,19 @@ router.post('/create', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('Create debate error:', err);
     return res.status(500).json({ error: 'Failed to create debate' });
+  }
+});
+
+// Suggest debate topics for a category
+router.post('/suggest-topics', async (req: Request, res: Response) => {
+  try {
+    const { category } = req.body as { category: string };
+    if (!category) return res.status(400).json({ error: 'category is required' });
+    const topics = await suggestTopics(category);
+    return res.json({ topics });
+  } catch (err) {
+    console.error('Suggest topics error:', err);
+    return res.status(500).json({ error: 'Failed to suggest topics' });
   }
 });
 

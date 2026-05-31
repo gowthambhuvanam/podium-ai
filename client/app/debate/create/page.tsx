@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createDebate } from '@/lib/api';
+import { createDebate, suggestTopics } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
+
+const CATEGORIES = ['Technology', 'Business', 'Ethics', 'Society', 'Science', 'Politics', 'Education', 'Health', 'Environment', 'Sports'];
 
 type Mode = 'solo' | '1v1' | 'group';
 type Skill = 'beginner' | 'intermediate' | 'expert';
@@ -35,6 +37,7 @@ function roleStatus(roleId: string, mode: Mode): { state: RoleState; reason?: st
   if (mode === 'solo') {
     if (roleId === 'participant') return { state: 'required', reason: 'The AI must be your opponent in Solo mode' };
     if (roleId === 'devils_advocate') return { state: 'disabled', reason: 'Redundant in Solo — the AI participant already argues the opposing side' };
+    if (roleId === 'interrogator') return { state: 'disabled', reason: 'Not needed in Solo — the AI participant already rebuts and pushes back on you' };
     return { state: 'available' };
   }
   if (mode === '1v1') {
@@ -61,6 +64,25 @@ export default function CreateDebatePage() {
   const [aiRoles, setAiRoles] = useState<string[]>(() => defaultRoles('solo', 'intermediate'));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Topic suggestions
+  const [activeCategory, setActiveCategory] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggesting, setSuggesting] = useState(false);
+
+  const loadSuggestions = async (category: string) => {
+    setActiveCategory(category);
+    setSuggesting(true);
+    setSuggestions([]);
+    try {
+      const { topics } = await suggestTopics(category);
+      setSuggestions(topics);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   // When mode changes: drop disabled roles, force required roles on
   const changeMode = (m: Mode) => {
@@ -136,7 +158,48 @@ export default function CreateDebatePage() {
             placeholder="e.g. Remote work kills workplace culture"
           />
           <p style={{ fontSize: '12px', color: '#374151', marginTop: '6px' }}>AI will sharpen this into a clear arguable proposition</p>
+
+          {/* Topic suggestions */}
+          <div style={{ marginTop: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '14px' }}>
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '10px', fontWeight: 600 }}>Need ideas? Pick a category and we will suggest topics</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => loadSuggestions(cat)}
+                  style={{ fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '999px', cursor: 'pointer', fontFamily: 'inherit',
+                    background: activeCategory === cat ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${activeCategory === cat ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    color: activeCategory === cat ? '#a5b4fc' : '#9ca3af' }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {suggesting && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', color: '#6b7280' }}>
+                <div style={{ width: '14px', height: '14px', border: '2px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <span style={{ fontSize: '12px' }}>Generating {activeCategory} topics...</span>
+              </div>
+            )}
+
+            {suggestions.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setTopic(s)}
+                    style={{ textAlign: 'left', fontSize: '13px', color: '#d1d5db', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit', lineHeight: 1.4 }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
         {/* Mode */}
         <div style={{ marginBottom: '32px' }}>

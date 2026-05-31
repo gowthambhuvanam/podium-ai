@@ -106,6 +106,28 @@ export async function sharpenTopic(topic: string): Promise<string> {
   return response.trim();
 }
 
+// Suggest debate topics for a category
+export async function suggestTopics(category: string): Promise<string[]> {
+  const response = await completion(
+    [
+      {
+        role: 'system',
+        content: `You generate engaging, debatable topics. Return ONLY a JSON array of 5 short debate topic strings. Each must be a clear, controversial, two-sided proposition. No numbering, no explanation.`,
+      },
+      { role: 'user', content: `Category: ${category}\n\nReturn a JSON array of 5 debate topics:` },
+    ],
+    FAST_MODEL,
+    300
+  );
+  try {
+    const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed.slice(0, 5) : [];
+  } catch {
+    return [];
+  }
+}
+
 // Predict which stance most people would take
 export async function predictStance(topic: string): Promise<string> {
   const response = await completion(

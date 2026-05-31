@@ -96,10 +96,19 @@ export default function DebateRoomPage() {
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
 
-    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string } }) => {
+    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; messages?: Message[]; momentum?: Momentum } }) => {
       setTopic(room.topic);
       setSharpenedTopic(room.sharpened_topic || room.topic);
-      if (stance) loadBriefing(room.sharpened_topic || room.topic, stance);
+      // Load any messages already in the room (for people who join mid-debate)
+      if (room.messages && room.messages.length > 0) setMessages(room.messages);
+      if (room.momentum) setMomentum(room.momentum);
+      // If the debate is already running, jump straight into it — do not get
+      // stuck on the briefing screen (this was the 1v1 second-player bug)
+      if (room.status === 'active') {
+        setStage('active');
+      } else if (stance) {
+        loadBriefing(room.sharpened_topic || room.topic, stance);
+      }
     });
 
     socket.on('new_message', (msg: Message) => setMessages(prev => [...prev, msg]));

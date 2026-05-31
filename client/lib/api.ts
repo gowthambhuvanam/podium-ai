@@ -31,6 +31,16 @@ export async function getBriefing(payload: {
   return res.json();
 }
 
+export async function suggestTopics(category: string): Promise<{ topics: string[] }> {
+  const res = await fetch(`${SERVER_URL}/api/debates/suggest-topics`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category }),
+  });
+  if (!res.ok) throw new Error('Failed to suggest topics');
+  return res.json();
+}
+
 export async function getDebate(id: string) {
   const res = await fetch(`${SERVER_URL}/api/debates/${id}`);
   if (!res.ok) throw new Error('Debate not found');
