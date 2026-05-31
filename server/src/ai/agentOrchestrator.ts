@@ -181,8 +181,11 @@ export async function orchestrateAgents(
     });
   }
 
-  // Run public agents sequentially to avoid rate limits
-  for (const agent of publicAgents) {
+  // Run public agents sequentially with a short gap to stay under
+  // Groq free-tier rate limits (bursts of parallel calls trigger 429s)
+  const gap = (ms: number) => new Promise(r => setTimeout(r, ms));
+  for (let i = 0; i < publicAgents.length; i++) {
+    const agent = publicAgents[i];
     try {
       const content = await agent.fn();
       const output = { role: agent.role, content };
@@ -191,6 +194,7 @@ export async function orchestrateAgents(
     } catch (err) {
       console.error(`Agent ${agent.role} failed:`, err);
     }
+    if (i < publicAgents.length - 1) await gap(700);
   }
 
   // Coach runs privately (not streamed publicly)
