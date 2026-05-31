@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
 import { getBriefing } from '@/lib/api';
 
@@ -46,6 +46,7 @@ type Stage = 'pick-stance' | 'briefing' | 'active' | 'completed';
 export default function DebateRoomPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const debateId = params.id as string;
   const urlStance = searchParams.get('stance') || '';
   const urlName = searchParams.get('name') || 'Debater';
@@ -247,33 +248,37 @@ export default function DebateRoomPage() {
   }
 
   // ─── SHARED HEADER ────────────────────────────────────────────────────────
+  const againstPct = 100 - forPct;
   const Header = () => (
     <div style={{ flexShrink: 0, background: '#0d0d18', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Scoreboard row */}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <span style={{ fontSize: '16px', fontWeight: 900, color: '#22c55e', minWidth: '28px', textAlign: 'right' }}>{momentum.for}</span>
-          <span style={{ fontSize: '9px', fontWeight: 700, color: '#374151', letterSpacing: '1px' }}>FOR</span>
-        </div>
-        <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '999px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${forPct}%`, background: 'linear-gradient(90deg, #22c55e, #16a34a)', borderRadius: '999px', transition: 'width 0.6s ease' }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <span style={{ fontSize: '9px', fontWeight: 700, color: '#374151', letterSpacing: '1px' }}>AGAINST</span>
-          <span style={{ fontSize: '16px', fontWeight: 900, color: '#ef4444', minWidth: '28px' }}>{momentum.against}</span>
-        </div>
-        <div style={{ marginLeft: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      {/* Top row: label + status */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 6px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#4b5563', letterSpacing: '2px' }}>MOMENTUM — who is winning the room</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#22c55e' : '#ef4444', display: 'inline-block' }} />
           <span style={{ fontSize: '11px', fontWeight: 800, color: stanceColor, background: `rgba(${stance === 'for' ? '34,197,94' : '239,68,68'},0.12)`, padding: '3px 10px', borderRadius: '999px' }}>
-            {stanceLabel}
+            YOU: {stanceLabel}
           </span>
           {stage === 'active' && (
-            <button onClick={endDebate} style={{ fontSize: '11px', color: '#6b7280', background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
-              End
+            <button onClick={endDebate} style={{ fontSize: '11px', fontWeight: 700, color: '#fca5a5', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+              End Debate
             </button>
           )}
         </div>
       </div>
+
+      {/* Tug-of-war meter */}
+      <div style={{ padding: '0 16px 8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 900, color: '#22c55e', minWidth: '54px' }}>FOR {forPct}%</span>
+          <div style={{ flex: 1, height: '10px', borderRadius: '999px', overflow: 'hidden', display: 'flex', background: 'rgba(255,255,255,0.04)' }}>
+            <div style={{ width: `${forPct}%`, background: 'linear-gradient(90deg, #16a34a, #22c55e)', transition: 'width 0.6s ease' }} />
+            <div style={{ width: `${againstPct}%`, background: 'linear-gradient(90deg, #ef4444, #b91c1c)', transition: 'width 0.6s ease' }} />
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 900, color: '#ef4444', minWidth: '64px', textAlign: 'right' }}>{againstPct}% AGAINST</span>
+        </div>
+      </div>
+
       {/* Topic bar */}
       <div style={{ padding: '0 16px 10px' }}>
         <p style={{ fontSize: '12px', color: '#374151', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
@@ -379,6 +384,119 @@ export default function DebateRoomPage() {
   }
 
   // ─── ACTIVE + COMPLETED ───────────────────────────────────────────────────
+  // ─── COMPLETED — dedicated full-page results ──────────────────────────────
+  if (stage === 'completed') {
+    const winnerHasFor = verdict?.winner?.toUpperCase().includes('FOR');
+    const winnerHasAgainst = verdict?.winner?.toUpperCase().includes('AGAINST');
+    const winnerColor = winnerHasFor ? '#22c55e' : winnerHasAgainst ? '#ef4444' : '#818cf8';
+
+    return (
+      <div style={{ minHeight: '100vh', background: '#09090f', color: '#fff' }}>
+        {/* Slim top bar */}
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 24px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0d0d18' }}>
+          <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px' }}>PODIUM</span>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => router.push('/debate/create')} style={{ fontSize: '13px', fontWeight: 700, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '10px', padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>New Debate</button>
+            <button onClick={() => router.push('/dashboard')} style={{ fontSize: '13px', color: '#9ca3af', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Dashboard</button>
+          </div>
+        </div>
+
+        <div style={{ maxWidth: '880px', margin: '0 auto', padding: '40px 24px 60px' }}>
+          {/* Topic */}
+          <p style={{ fontSize: '13px', color: '#4b5563', marginBottom: '6px', textAlign: 'center' }}>{sharpenedTopic || topic}</p>
+
+          {!verdict && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '60px 0' }}>
+              <div style={{ width: '24px', height: '24px', border: '3px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <p style={{ color: '#6b7280', fontSize: '14px' }}>The judge is analyzing the debate...</p>
+            </div>
+          )}
+
+          {verdict && (
+            <>
+              {/* Verdict hero */}
+              <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 800, color: '#c084fc', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>Final Verdict</p>
+                <h1 style={{ fontSize: '44px', fontWeight: 900, color: winnerColor, letterSpacing: '-1.5px', marginBottom: '16px' }}>{verdict.winner}</h1>
+                <p style={{ fontSize: '15px', color: '#9ca3af', lineHeight: 1.7, maxWidth: '640px', margin: '0 auto' }}>{verdict.reasoning}</p>
+              </div>
+
+              {/* Score split */}
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginBottom: '40px', padding: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', fontWeight: 900, color: '#22c55e', lineHeight: 1 }}>{verdict.final_scores.for}</div>
+                  <div style={{ fontSize: '11px', color: '#4b5563', fontWeight: 700, letterSpacing: '2px', marginTop: '4px' }}>FOR</div>
+                </div>
+                <div style={{ width: '1px', background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '48px', fontWeight: 900, color: '#ef4444', lineHeight: 1 }}>{verdict.final_scores.against}</div>
+                  <div style={{ fontSize: '11px', color: '#4b5563', fontWeight: 700, letterSpacing: '2px', marginTop: '4px' }}>AGAINST</div>
+                </div>
+              </div>
+
+              {/* Performance cards */}
+              {verdict.performance_cards.length > 0 && (
+                <div style={{ marginBottom: '36px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 800, color: '#6b7280', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '14px' }}>Performance Breakdown</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '12px' }}>
+                    {verdict.performance_cards.map(card => (
+                      <div key={card.user_name} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                          <span style={{ fontWeight: 800, fontSize: '16px', color: '#fff' }}>{card.user_name}</span>
+                          <span style={{ fontSize: '28px', fontWeight: 900, color: '#818cf8' }}>{card.overall_score}<span style={{ fontSize: '14px', color: '#4b5563' }}>/100</span></span>
+                        </div>
+                        <div style={{ marginBottom: '10px' }}>
+                          <p style={{ fontSize: '10px', fontWeight: 700, color: '#22c55e', letterSpacing: '1px', marginBottom: '3px' }}>STRONGEST POINT</p>
+                          <p style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.5 }}>{card.strongest_argument}</p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '10px', fontWeight: 700, color: '#fbbf24', letterSpacing: '1px', marginBottom: '3px' }}>WHAT YOU MISSED</p>
+                          <p style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.5 }}>{card.what_you_missed}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fallacies detected */}
+              {fallacyAlerts.length > 0 && (
+                <div style={{ marginBottom: '36px' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 800, color: '#6b7280', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '4px' }}>Fallacies Detected</p>
+                  <p style={{ fontSize: '12px', color: '#374151', marginBottom: '14px' }}>Logical errors flagged during the debate</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+                    {fallacyAlerts.map((alert, i) => (
+                      <div key={i} style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '14px', padding: '14px 16px' }}>
+                        <p style={{ fontSize: '13px', fontWeight: 800, color: '#f87171', marginBottom: '8px' }}>{alert.sender_name}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {alert.fallacies.map(f => (
+                            <div key={f}>
+                              <span style={{ fontSize: '12px', color: '#fca5a5', fontWeight: 700 }}>{f}</span>
+                              {FALLACY_EXPLANATIONS[f] && <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px', lineHeight: 1.4 }}>{FALLACY_EXPLANATIONS[f]}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button onClick={() => router.push('/debate/create')} style={{ padding: '14px 32px', fontSize: '15px', fontWeight: 800, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 0 32px rgba(99,102,241,0.3)' }}>
+                  Start New Debate
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  // ─── ACTIVE ───────────────────────────────────────────────────────────────
   return (
     <div style={{ height: '100vh', background: '#09090f', color: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Header />
@@ -451,43 +569,6 @@ export default function DebateRoomPage() {
 
             <div ref={messagesEndRef} />
           </div>
-
-          {/* VERDICT */}
-          {stage === 'completed' && verdict && (
-            <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.08)', background: '#0d0d18', padding: '20px', overflowY: 'auto', maxHeight: '280px' }}>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '10px', fontWeight: 800, color: '#c084fc', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '4px' }}>Verdict</p>
-                  <p style={{ fontSize: '22px', fontWeight: 900, color: '#fff', marginBottom: '6px', letterSpacing: '-0.5px' }}>{verdict.winner}</p>
-                  <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.6 }}>{verdict.reasoning}</p>
-                </div>
-                <div style={{ display: 'flex', gap: '16px', flexShrink: 0 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '28px', fontWeight: 900, color: '#22c55e' }}>{verdict.final_scores.for}</div>
-                    <div style={{ fontSize: '9px', color: '#374151', fontWeight: 700, letterSpacing: '1px' }}>FOR</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '28px', fontWeight: 900, color: '#ef4444' }}>{verdict.final_scores.against}</div>
-                    <div style={{ fontSize: '9px', color: '#374151', fontWeight: 700, letterSpacing: '1px' }}>AGAINST</div>
-                  </div>
-                </div>
-              </div>
-              {verdict.performance_cards.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
-                  {verdict.performance_cards.map(card => (
-                    <div key={card.user_name} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <span style={{ fontWeight: 800, fontSize: '14px', color: '#fff' }}>{card.user_name}</span>
-                        <span style={{ fontSize: '20px', fontWeight: 900, color: '#818cf8' }}>{card.overall_score}</span>
-                      </div>
-                      <p style={{ fontSize: '12px', color: '#22c55e', marginBottom: '4px', lineHeight: 1.5 }}>Best: {card.strongest_argument}</p>
-                      <p style={{ fontSize: '12px', color: '#fbbf24', lineHeight: 1.5 }}>Missed: {card.what_you_missed}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* INPUT */}
           {stage === 'active' && (
