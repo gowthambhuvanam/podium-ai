@@ -109,8 +109,13 @@ export function registerEventHandlers(io: Server, socket: Socket) {
         });
       }
 
-      // Run AI agents if any are selected
-      if (room.ai_roles.length > 0 && !room.ai_roles.every(r => r === 'judge')) {
+      // Only let AI agents respond to substantive arguments, not short
+      // fragments or meta-remarks like "remote work actually"
+      const wordCount = content.trim().split(/\s+/).length;
+      const isSubstantive = wordCount >= 5;
+
+      // Run AI agents if any are selected and the message is a real argument
+      if (isSubstantive && room.ai_roles.length > 0 && !room.ai_roles.every(r => r === 'judge')) {
         const updatedRoom = getRoom(debate_id)!;
 
         await orchestrateAgents(

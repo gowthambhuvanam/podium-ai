@@ -15,27 +15,55 @@ export interface AgentOutput {
   targetStance?: Stance;
 }
 
+// Only these real, well-known fallacies may be flagged. This stops the
+// model from inventing fake names like "Argumentum ad Interrupting".
+const VALID_FALLACIES = new Set([
+  'Hasty Generalization',
+  'Unsubstantiated Claim',
+  'Slippery Slope',
+  'Ad Hominem',
+  'Straw Man',
+  'Appeal to Emotion',
+  'False Dichotomy',
+  'Circular Reasoning',
+  'Appeal to Authority',
+  'Red Herring',
+]);
+
 // Detect logical fallacies in a message
 export async function detectFallacies(content: string): Promise<string[]> {
+  // Skip trivial / meta / non-argument messages — these are not claims to judge
+  const wordCount = content.trim().split(/\s+/).length;
+  if (wordCount < 6) return [];
+
   const response = await completion(
     [
       {
         role: 'system',
-        content: `You are a logical fallacy detector. Analyze the argument and return ONLY a JSON array of fallacy names found. Return [] if none. Max 3 fallacies.`,
+        content: `You are a strict logical fallacy detector. ONLY flag a fallacy if the message makes a substantive argument AND clearly commits one of these exact fallacies:
+Hasty Generalization, Unsubstantiated Claim, Slippery Slope, Ad Hominem, Straw Man, Appeal to Emotion, False Dichotomy, Circular Reasoning, Appeal to Authority, Red Herring.
+
+Rules:
+- If the message is a question, a casual remark, a complaint, or not an argument, return [].
+- Do NOT invent fallacy names. Use ONLY the exact names from the list above.
+- Be conservative. Most messages have zero fallacies. When unsure, return [].
+- Return ONLY a JSON array. Max 2 fallacies.`,
       },
       {
         role: 'user',
-        content: `Argument: "${content}"\n\nReturn JSON array of fallacy names found:`,
+        content: `Message: "${content}"\n\nReturn JSON array of fallacy names (or [] if none):`,
       },
     ],
     FAST_MODEL,
-    100
+    80
   );
 
   try {
     const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
     const parsed = JSON.parse(cleaned);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Filter out anything not in our known list
+    return parsed.filter((f: unknown) => typeof f === 'string' && VALID_FALLACIES.has(f)).slice(0, 2);
   } catch {
     return [];
   }
