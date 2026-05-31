@@ -82,6 +82,16 @@ export default function DebateRoomPage() {
   const baseTextRef = useRef('');        // text already in the box before mic started
   const finalTranscriptRef = useRef(''); // accumulated finalized speech this session
   const listeningRef = useRef(false);    // true while the user wants the mic on
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-grow the message box as text is typed or transcribed (up to a cap)
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+    }
+  }, [input]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, streamingMessages]);
   useEffect(() => { setRoomLink(window.location.href.split('?')[0]); }, []);
@@ -677,13 +687,15 @@ export default function DebateRoomPage() {
                   <span style={{ fontSize: '13px', color: '#fed7aa', lineHeight: 1.5 }}>{coachTip}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <input
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                <textarea
+                  ref={inputRef}
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                  rows={1}
                   placeholder={`Argue ${stanceLabel} the motion... (or use the mic)`}
-                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '14px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'inherit', resize: 'none', lineHeight: 1.5, maxHeight: '140px', overflowY: 'auto' }}
                 />
                 {/* Voice button */}
                 <button
@@ -696,7 +708,7 @@ export default function DebateRoomPage() {
                 <button
                   onClick={() => sendMessage()}
                   disabled={!input.trim()}
-                  style={{ padding: '12px 20px', background: input.trim() ? '#6366f1' : 'rgba(99,102,241,0.2)', border: 'none', borderRadius: '14px', color: input.trim() ? '#fff' : '#4b5563', fontSize: '14px', fontWeight: 800, cursor: input.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}>
+                  style={{ height: '44px', padding: '0 20px', background: input.trim() ? '#6366f1' : 'rgba(99,102,241,0.2)', border: 'none', borderRadius: '14px', color: input.trim() ? '#fff' : '#4b5563', fontSize: '14px', fontWeight: 800, cursor: input.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', flexShrink: 0, transition: 'all 0.15s' }}>
                   Send
                 </button>
               </div>

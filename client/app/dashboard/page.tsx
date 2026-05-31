@@ -20,23 +20,18 @@ export default function DashboardPage() {
   const [credits, setCredits] = useState<number | null>(null);
   const [debates, setDebates] = useState<Debate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [joinValue, setJoinValue] = useState('');
 
   useEffect(() => {
     const load = async () => {
       try {
         const session = await getSession();
         if (!session) { router.push('/auth/login'); return; }
-
         const name = session.user.user_metadata?.name || session.user.email || 'Debater';
         const uid = session.user.id;
         setUserName(name);
         setUserId(uid);
-
-        const [bal, history] = await Promise.allSettled([
-          getCreditBalance(uid),
-          getDebateHistory(uid),
-        ]);
-
+        const [bal, history] = await Promise.allSettled([getCreditBalance(uid), getDebateHistory(uid)]);
         if (bal.status === 'fulfilled') setCredits(bal.value.balance);
         if (history.status === 'fulfilled') setDebates(history.value || []);
       } catch {
@@ -50,110 +45,119 @@ export default function DashboardPage() {
 
   const handleSignOut = async () => { await signOut(); router.push('/'); };
 
+  const handleJoin = () => {
+    const val = joinValue.trim();
+    if (!val) return;
+    const id = val.includes('/debate/') ? val.split('/debate/')[1].split('?')[0] : val;
+    router.push(`/debate/${id}?stance=against&name=${encodeURIComponent(userName)}&user_id=${userId}`);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#08080f] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-indigo-500/40 border-t-indigo-500 rounded-full animate-spin" />
+      <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '24px', height: '24px', border: '3px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
+  const modeColor = (s: string) =>
+    s === 'completed' ? { bg: 'rgba(34,197,94,0.15)', color: '#22c55e' }
+    : s === 'active' ? { bg: 'rgba(99,102,241,0.15)', color: '#818cf8' }
+    : { bg: 'rgba(255,255,255,0.06)', color: '#6b7280' };
+
   return (
-    <main className="min-h-screen bg-[#08080f] text-white">
+    <div style={{ minHeight: '100vh', background: '#09090f', color: '#fff' }}>
       {/* Nav */}
-      <nav className="border-b border-white/[0.06] px-6 h-14 flex items-center justify-between bg-[#0f0f1a]">
-        <span className="text-lg font-black tracking-tight">PODIUM</span>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">{userName}</span>
-          <button onClick={handleSignOut} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">Sign out</button>
+      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 24px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0d0d18' }}>
+        <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px' }}>PODIUM</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span style={{ fontSize: '14px', color: '#9ca3af' }}>{userName}</span>
+          <button onClick={handleSignOut} style={{ fontSize: '12px', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div style={{ maxWidth: '880px', margin: '0 auto', padding: '40px 24px' }}>
 
-        {/* Welcome + Credits */}
-        <div className="flex items-start justify-between mb-10">
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <p className="text-gray-500 text-sm mb-1">Welcome back,</p>
-            <h1 className="text-3xl font-black text-white">{userName}</h1>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>Welcome back,</p>
+            <h1 style={{ fontSize: '34px', fontWeight: 900, color: '#fff', letterSpacing: '-1px' }}>{userName}</h1>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-black text-indigo-400">{credits ?? '--'}</div>
-            <div className="text-xs text-gray-600 uppercase tracking-widest">Credits</div>
+          <div style={{ textAlign: 'right', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '16px', padding: '12px 24px' }}>
+            <div style={{ fontSize: '32px', fontWeight: 900, color: '#818cf8', lineHeight: 1 }}>{credits ?? '--'}</div>
+            <div style={{ fontSize: '10px', color: '#6b7280', fontWeight: 700, letterSpacing: '2px', marginTop: '4px' }}>CREDITS</div>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        {/* CTA cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', marginBottom: '40px' }}>
+          {/* New Debate */}
           <button
             onClick={() => router.push('/debate/create')}
-            className="group bg-indigo-600/20 border border-indigo-500/30 hover:border-indigo-500/60 hover:bg-indigo-600/30 rounded-2xl p-6 text-left transition-all card-hover"
+            style={{ textAlign: 'left', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '20px', padding: '28px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 0 24px rgba(99,102,241,0.1)' }}
           >
-            <div className="text-2xl font-black text-white mb-2">New Debate</div>
-            <p className="text-sm text-gray-400">Create a room, pick your AI agents, enter the arena.</p>
-            <span className="text-xs font-bold text-indigo-400 mt-3 block group-hover:text-indigo-300 transition-colors">Enter the Arena →</span>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#fff', marginBottom: '8px' }}>New Debate</div>
+            <p style={{ fontSize: '14px', color: '#9ca3af', lineHeight: 1.5, marginBottom: '16px' }}>Create a room, pick your AI agents, enter the arena.</p>
+            <span style={{ fontSize: '13px', fontWeight: 800, color: '#818cf8' }}>Enter the Arena →</span>
           </button>
 
-          <div className="bg-white/[0.02] border border-white/[0.07] rounded-2xl p-6">
-            <div className="text-2xl font-black text-white mb-2">Join a Debate</div>
-            <p className="text-sm text-gray-400 mb-3">Have a room code or link from someone?</p>
-            <input
-              placeholder="Paste debate link or ID..."
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-indigo-500/50 transition-colors placeholder-gray-700"
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  const val = (e.target as HTMLInputElement).value.trim();
-                  if (val) {
-                    const id = val.includes('/debate/') ? val.split('/debate/')[1].split('?')[0] : val;
-                    router.push(`/debate/${id}?stance=against&name=${encodeURIComponent(userName)}&user_id=${userId}`);
-                  }
-                }
-              }}
-            />
+          {/* Join */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '28px' }}>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#fff', marginBottom: '8px' }}>Join a Debate</div>
+            <p style={{ fontSize: '14px', color: '#9ca3af', lineHeight: 1.5, marginBottom: '16px' }}>Have a room link from someone?</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                value={joinValue}
+                onChange={e => setJoinValue(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                placeholder="Paste debate link or ID..."
+                style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 14px', color: '#fff', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }}
+              />
+              <button onClick={handleJoin} style={{ padding: '10px 16px', background: '#6366f1', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Join</button>
+            </div>
           </div>
         </div>
 
-        {/* Debate History */}
+        {/* History */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Recent Debates</h2>
-            {debates.length > 0 && <span className="text-xs text-gray-700">{debates.length} total</span>}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '11px', fontWeight: 800, color: '#6b7280', letterSpacing: '2px', textTransform: 'uppercase' }}>Recent Debates</h2>
+            {debates.length > 0 && <span style={{ fontSize: '12px', color: '#374151' }}>{debates.length} total</span>}
           </div>
 
           {debates.length === 0 ? (
-            <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-10 text-center">
-              <p className="text-gray-600 text-sm">No debates yet.</p>
-              <button onClick={() => router.push('/debate/create')} className="mt-3 text-indigo-400 hover:text-indigo-300 text-sm font-semibold transition-colors">
-                Create your first debate
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '48px 24px', textAlign: 'center' }}>
+              <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '12px' }}>No debates yet.</p>
+              <button onClick={() => router.push('/debate/create')} style={{ fontSize: '14px', fontWeight: 700, color: '#818cf8', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Create your first debate →
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
-              {debates.map(d => (
-                <div
-                  key={d.id}
-                  onClick={() => router.push(`/debate/${d.id}?name=${encodeURIComponent(userName)}&user_id=${userId}&stance=for`)}
-                  className="bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] rounded-2xl px-5 py-4 flex items-center gap-4 cursor-pointer transition-all card-hover"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{d.topic}</p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {d.mode.toUpperCase()} · {new Date(d.created_at).toLocaleDateString()}
-                    </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {debates.map(d => {
+                const sc = modeColor(d.status);
+                return (
+                  <div
+                    key={d.id}
+                    onClick={() => router.push(`/debate/${d.id}?name=${encodeURIComponent(userName)}&user_id=${userId}&stance=for`)}
+                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.topic}</p>
+                      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>{d.mode?.toUpperCase()} · {new Date(d.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span style={{ fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', flexShrink: 0, background: sc.bg, color: sc.color }}>
+                      {d.status?.toUpperCase()}
+                    </span>
                   </div>
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 ${
-                    d.status === 'completed' ? 'bg-green-500/15 text-green-400' :
-                    d.status === 'active' ? 'bg-indigo-500/15 text-indigo-400 animate-pulse' :
-                    'bg-white/[0.06] text-gray-500'
-                  }`}>
-                    {d.status.toUpperCase()}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
