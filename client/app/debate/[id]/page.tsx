@@ -188,10 +188,11 @@ export default function DebateRoomPage() {
       for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
+      // Fill the text box live so the user can review and edit.
+      // Do NOT auto-send — the user reviews, edits, then clicks Send.
       setInput(transcript);
       if (event.results[event.results.length - 1].isFinal) {
         setIsListening(false);
-        sendMessage(transcript);
       }
     };
 
@@ -521,7 +522,7 @@ export default function DebateRoomPage() {
                 </button>
               </div>
               {isListening && (
-                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px', textAlign: 'center' }}>Listening... speak your argument</p>
+                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px', textAlign: 'center' }}>Listening... speak your argument, then review and edit before sending</p>
               )}
             </div>
           )}
