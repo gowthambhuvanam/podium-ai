@@ -34,6 +34,18 @@ router.post('/create', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'topic, mode, and user_id are required' });
     }
 
+    // Enforce role rules by mode (mirror of the client rules engine):
+    // - solo: AI must be the Participant; Devil's Advocate is redundant
+    // - 1v1: both sides are humans, so no AI Participant
+    let safeRoles = Array.isArray(ai_roles) ? [...ai_roles] : [];
+    if (mode === 'solo') {
+      safeRoles = safeRoles.filter(r => r !== 'devils_advocate');
+      if (!safeRoles.includes('participant')) safeRoles.push('participant');
+    } else if (mode === '1v1') {
+      safeRoles = safeRoles.filter(r => r !== 'participant');
+    }
+    const finalRoles = Array.from(new Set(safeRoles));
+
     // Sharpen the topic
     const sharpened_topic = await sharpenTopic(topic);
 
@@ -49,7 +61,7 @@ router.post('/create', async (req: Request, res: Response) => {
       mode,
       status: 'waiting',
       skill_level: skill_level || 'intermediate',
-      ai_roles: ai_roles || [],
+      ai_roles: finalRoles,
       participants: [],
       messages: [],
       created_by: user_id,
@@ -68,7 +80,7 @@ router.post('/create', async (req: Request, res: Response) => {
       mode,
       status: 'waiting',
       skill_level: skill_level || 'intermediate',
-      ai_roles,
+      ai_roles: finalRoles,
       created_by: user_id,
       created_at: new Date().toISOString(),
     });
@@ -80,7 +92,7 @@ router.post('/create', async (req: Request, res: Response) => {
       stance_prediction,
       mode,
       skill_level,
-      ai_roles,
+      ai_roles: finalRoles,
     });
   } catch (err) {
     console.error('Create debate error:', err);
