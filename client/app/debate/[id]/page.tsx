@@ -76,6 +76,9 @@ export default function DebateRoomPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef(connectSocket());
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const baseTextRef = useRef('');        // text already in the box before mic started
+  const finalTranscriptRef = useRef(''); // accumulated finalized speech this session
+  const listeningRef = useRef(false);    // true while the user wants the mic on
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, streamingMessages]);
   useEffect(() => { setRoomLink(window.location.href.split('?')[0]); }, []);
@@ -161,6 +164,8 @@ export default function DebateRoomPage() {
   const sendMessage = (text?: string) => {
     const content = (text || input).trim();
     if (!content || stage !== 'active') return;
+    // Sending stops the mic so it does not keep listening after you submit
+    if (listeningRef.current) stopVoice();
     socketRef.current.emit('send_message', { debate_id: debateId, user_id: userId, user_name: userName, content, stance });
     setInput('');
   };
@@ -173,45 +178,70 @@ export default function DebateRoomPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Voice input
-  const toggleVoice = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+  // Stop the mic explicitly (user click or after send)
+  const stopVoice = () => {
+    listeningRef.current = false;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+  };
+
+  // Voice input — continuous, survives short pauses, appends instead of replacing
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
       alert('Voice input is not supported in this browser. Try Chrome.');
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
+    // Preserve whatever is already typed/spoken so far, then append to it
+    baseTextRef.current = input ? input.trim() + ' ' : '';
+    finalTranscriptRef.current = '';
+    listeningRef.current = true;
 
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setIsListening(false); return; }
     const recognition = new SR();
-    recognition.continuous = false;
-    recognition.interimResults = true;
+    recognition.continuous = true;     // keep listening through pauses
+    recognition.interimResults = true; // show words as they are spoken
     recognition.lang = 'en-US';
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let transcript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscriptRef.current += t + ' ';
+        } else {
+          interim += t;
+        }
       }
-      // Fill the text box live so the user can review and edit.
-      // Do NOT auto-send — the user reviews, edits, then clicks Send.
-      setInput(transcript);
-      if (event.results[event.results.length - 1].isFinal) {
+      setInput((baseTextRef.current + finalTranscriptRef.current + interim).trim());
+    };
+
+    // Browsers fire onend after silence even in continuous mode. If the user
+    // still wants the mic on, restart it so short pauses do not end the session.
+    recognition.onend = () => {
+      if (listeningRef.current) {
+        try { recognition.start(); } catch { /* already started */ }
+      } else {
         setIsListening(false);
       }
     };
 
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
+    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+      // 'no-speech' and 'aborted' are recoverable — let onend restart.
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        stopVoice();
+      }
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
+  };
+
+  const toggleVoice = () => {
+    if (isListening) stopVoice();
+    else startVoice();
   };
 
   const forPct = Math.round((momentum.for / (momentum.for + momentum.against)) * 100);
@@ -612,7 +642,7 @@ export default function DebateRoomPage() {
                 </button>
               </div>
               {isListening && (
-                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px', textAlign: 'center' }}>Listening... speak your argument, then review and edit before sending</p>
+                <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px', textAlign: 'center' }}>Listening... take your time. Click the mic to stop, or Send when ready.</p>
               )}
             </div>
           )}
