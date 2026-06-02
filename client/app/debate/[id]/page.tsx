@@ -55,8 +55,16 @@ export default function DebateRoomPage() {
 
   const [stage, setStage] = useState<Stage>(isSpectator ? 'active' : urlStance ? 'briefing' : 'pick-stance');
   const [stance, setStance] = useState(urlStance || '');
-  const [userName] = useState(urlName);
-  const [userId] = useState(urlUserId);
+  // Give every guest a UNIQUE id so multiple people in a group room are not
+  // collapsed into one participant. Logged-in users keep their real id.
+  const [userId] = useState(() =>
+    urlUserId && urlUserId !== 'guest' ? urlUserId : 'guest-' + Math.random().toString(36).slice(2, 10)
+  );
+  const [userName, setUserName] = useState(() =>
+    urlName && urlName !== 'Debater' && urlName !== 'Opponent' && urlName !== 'Spectator'
+      ? urlName
+      : ''
+  );
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [streamingMessages, setStreamingMessages] = useState<Record<string, string>>({});
@@ -69,6 +77,8 @@ export default function DebateRoomPage() {
   const [topic, setTopic] = useState('');
   const [sharpenedTopic, setSharpenedTopic] = useState('');
   const [debateMode, setDebateMode] = useState<'solo' | '1v1' | 'group'>('solo');
+  const [participants, setParticipants] = useState<{ name: string; stance: string }[]>([]);
+  const joinedCount = participants.length;
   const [connected, setConnected] = useState(false);
   const [roomLink, setRoomLink] = useState('');
   const [copied, setCopied] = useState(false);
@@ -105,7 +115,8 @@ export default function DebateRoomPage() {
 
   const joinRoom = useCallback((s: string) => {
     socketRef.current.emit('join_room', {
-      debate_id: debateId, user_id: userId, user_name: userName,
+      debate_id: debateId, user_id: userId,
+      user_name: userName || (isSpectator ? 'Spectator' : 'Guest'),
       stance: s, role: isSpectator ? 'spectator' : 'participant',
     });
   }, [debateId, userId, userName, isSpectator]);
@@ -116,13 +127,17 @@ export default function DebateRoomPage() {
     socket.on('disconnect', () => setConnected(false));
     socket.on('error', ({ message }: { message: string }) => alert(message));
 
-    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; mode?: 'solo' | '1v1' | 'group'; messages?: Message[]; momentum?: Momentum } }) => {
+    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; mode?: 'solo' | '1v1' | 'group'; messages?: Message[]; momentum?: Momentum; participants?: { name: string; stance: string; is_ai?: boolean }[] } }) => {
       setTopic(room.topic);
       setSharpenedTopic(room.sharpened_topic || room.topic);
       if (room.mode) setDebateMode(room.mode);
       // Load any messages already in the room (for people who join mid-debate)
       if (room.messages && room.messages.length > 0) setMessages(room.messages);
       if (room.momentum) setMomentum(room.momentum);
+      // Track the human participants in the room
+      if (room.participants) {
+        setParticipants(room.participants.filter(p => !p.is_ai).map(p => ({ name: p.name, stance: p.stance })));
+      }
       // Spectators always go straight to the watch view, no briefing
       if (isSpectator) {
         setStage(room.status === 'completed' ? 'completed' : 'active');
@@ -135,6 +150,10 @@ export default function DebateRoomPage() {
       } else if (stance) {
         loadBriefing(room.sharpened_topic || room.topic, stance);
       }
+    });
+
+    socket.on('participant_joined', ({ user_name, stance }: { user_name: string; stance: string }) => {
+      setParticipants(prev => prev.some(p => p.name === user_name) ? prev : [...prev, { name: user_name, stance }]);
     });
 
     socket.on('new_message', (msg: Message) => setMessages(prev => [...prev, msg]));
@@ -165,7 +184,7 @@ export default function DebateRoomPage() {
     if (isSpectator || stance) joinRoom(stance);
 
     return () => {
-      ['connect','disconnect','error','room_joined','new_message','ai_chunk','ai_message_complete',
+      ['connect','disconnect','error','room_joined','participant_joined','new_message','ai_chunk','ai_message_complete',
        'momentum_update','fallacy_detected','coach_whisper','debate_started','debate_ended']
         .forEach(e => socket.off(e));
       disconnectSocket();
@@ -194,12 +213,6 @@ export default function DebateRoomPage() {
   };
 
   const endDebate = () => socketRef.current.emit('end_debate', { debate_id: debateId });
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(roomLink + `?stance=${stance === 'for' ? 'against' : 'for'}&name=Opponent&user_id=guest`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   // Stop the mic explicitly (user click or after send)
   const stopVoice = () => {
@@ -293,7 +306,18 @@ export default function DebateRoomPage() {
           )}
           {!(sharpenedTopic || topic) && <p style={{ fontSize: '14px', color: '#374151', marginBottom: '40px' }}>Connecting to debate room...</p>}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+          {/* Name — required so participants are identified in the room/verdict */}
+          <div style={{ marginBottom: '24px', textAlign: 'left' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#6b7280', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>Your name</label>
+            <input
+              value={userName}
+              onChange={e => setUserName(e.target.value)}
+              placeholder="Enter your name to join"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', color: '#fff', fontSize: '14px', outline: 'none', fontFamily: 'inherit' }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px', opacity: userName.trim() ? 1 : 0.4, pointerEvents: userName.trim() ? 'auto' : 'none' }}>
             <button
               onClick={() => handlePickStance('for')}
               style={{ background: 'rgba(34,197,94,0.08)', border: '2px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '32px 24px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
@@ -313,7 +337,7 @@ export default function DebateRoomPage() {
               <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.5 }}>Challenge the motion. Find the flaws.</div>
             </button>
           </div>
-          <p style={{ fontSize: '12px', color: '#1f2937' }}>Your briefing will be tailored to the side you pick</p>
+          <p style={{ fontSize: '12px', color: '#1f2937' }}>{userName.trim() ? 'Your briefing will be tailored to the side you pick' : 'Enter your name above to choose a side'}</p>
         </div>
       </div>
     );
@@ -434,22 +458,43 @@ export default function DebateRoomPage() {
               </div>
             )}
 
-            {/* Invite link — only for multi-human modes, not solo */}
+            {/* Invite link — only for multi-human modes, not solo.
+                Joiners open a clean link, enter their name, and pick their
+                own side (each gets a unique id, so group rooms work). */}
             {debateMode !== 'solo' && (
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
                 <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', fontWeight: 600 }}>
                   {debateMode === '1v1'
-                    ? `Invite your opponent — they will join the ${stance === 'for' ? 'AGAINST' : 'FOR'} side`
-                    : 'Invite participants — share this link (up to 10 people can join this room)'}
+                    ? 'Invite your opponent — share this link. They pick their side and join.'
+                    : `Invite participants — share this link. Up to ${10 - joinedCount} more can join (10 max).`}
                 </p>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <input readOnly value={roomLink + `?stance=${stance === 'for' ? 'against' : 'for'}&name=Opponent&user_id=guest`}
+                  <input readOnly value={roomLink}
                     style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px 14px', color: '#6b7280', fontSize: '12px', outline: 'none', fontFamily: 'inherit' }}
                   />
-                  <button onClick={copyLink}
+                  <button onClick={() => { navigator.clipboard.writeText(roomLink); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
                     style={{ padding: '10px 16px', background: copied ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: copied ? '#22c55e' : '#9ca3af', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                     {copied ? 'Copied!' : 'Copy'}
                   </button>
+                </div>
+
+                {/* Live participant count so the host knows who has joined */}
+                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p style={{ fontSize: '11px', fontWeight: 700, color: '#818cf8', marginBottom: '6px' }}>
+                    {joinedCount} {joinedCount === 1 ? 'person' : 'people'} in the room
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {participants.map((p, i) => (
+                      <span key={i} style={{ fontSize: '11px', fontWeight: 600, padding: '3px 10px', borderRadius: '999px', background: p.stance === 'for' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: p.stance === 'for' ? '#22c55e' : '#f87171' }}>
+                        {p.name} ({p.stance === 'for' ? 'FOR' : 'AGAINST'})
+                      </span>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#374151', marginTop: '8px' }}>
+                    {debateMode === '1v1'
+                      ? 'Start when your opponent has joined.'
+                      : 'Wait for participants to join, then press Start. People can also join after it begins.'}
+                  </p>
                 </div>
               </div>
             )}
