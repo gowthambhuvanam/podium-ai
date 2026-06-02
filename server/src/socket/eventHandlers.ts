@@ -6,8 +6,9 @@ import {
   detectFallacies,
   updateMomentum,
   runJudge,
+  runLifeline,
 } from '../ai/agentOrchestrator.js';
-import { Message, AIRole } from '../types/index.js';
+import { Message, AIRole, Stance } from '../types/index.js';
 import { supabase } from '../db/supabase.js';
 
 const ROLE_LABELS: Record<AIRole, string> = {
@@ -15,7 +16,6 @@ const ROLE_LABELS: Record<AIRole, string> = {
   devils_advocate: "Devil's Advocate",
   interrogator: 'Socratic Interrogator',
   coach: 'Coach',
-  steelman: 'Steelman',
   judge: 'Judge',
 };
 
@@ -143,18 +143,13 @@ export function registerEventHandlers(io: Server, socket: Socket) {
           message,
           (output, chunk, done) => {
             if (output.role === 'coach') {
-              // Coach messages go privately to the target stance players
+              // Coach feedback goes privately to the sender whose message it
+              // critiqued (delivery feedback on their own phrasing)
               if (done && output.content) {
-                const targetSockets = room.participants
-                  .filter(p => p.stance === output.targetStance && p.socket_id)
-                  .map(p => p.socket_id!);
-
-                targetSockets.forEach(socketId => {
-                  io.to(socketId).emit('coach_whisper', {
-                    content: output.content,
-                    stance: output.targetStance,
-                  });
-                });
+                const sender = room.participants.find(p => p.user_id === output.targetUserId && p.socket_id);
+                if (sender?.socket_id) {
+                  io.to(sender.socket_id).emit('coach_whisper', { content: output.content });
+                }
               }
             } else {
               // Public agents stream to the whole room
@@ -191,6 +186,56 @@ export function registerEventHandlers(io: Server, socket: Socket) {
       }
     } catch (err) {
       console.error('send_message error:', err);
+    }
+  });
+
+  // Use a Devil's Advocate lifeline (only for the trailing side, 3 per side)
+  socket.on('use_lifeline', async ({ debate_id, stance }: { debate_id: string; stance: Stance }) => {
+    try {
+      const room = getRoom(debate_id);
+      if (!room) return;
+      if (!room.ai_roles.includes('devils_advocate')) {
+        socket.emit('error', { message: 'Devil\'s Advocate is not enabled in this debate.' });
+        return;
+      }
+
+      const other: Stance = stance === 'for' ? 'against' : 'for';
+      const myMomentum = room.momentum[stance as 'for' | 'against'];
+      const otherMomentum = room.momentum[other as 'for' | 'against'];
+
+      // Must be trailing to use it, and the debate must have started
+      if (room.messages.filter(m => !m.is_ai).length < 2) {
+        socket.emit('error', { message: 'Lifelines unlock once the debate is underway.' });
+        return;
+      }
+      if (myMomentum >= otherMomentum) {
+        socket.emit('error', { message: 'Lifelines are only for the side that is behind. You are not trailing right now.' });
+        return;
+      }
+
+      const remaining = room.lifelines[stance as 'for' | 'against'];
+      if (remaining <= 0) {
+        socket.emit('error', { message: 'No lifelines left for your side.' });
+        return;
+      }
+
+      // Spend one heart
+      const newLifelines = { ...room.lifelines, [stance]: remaining - 1 };
+      updateRoom(debate_id, { lifelines: newLifelines });
+
+      // Generate the counter-arguments privately
+      const ammo = await runLifeline(room, stance);
+
+      socket.emit('lifeline_result', {
+        content: ammo,
+        remaining: newLifelines[stance as 'for' | 'against'],
+        stance,
+      });
+      // Update heart count for everyone on that side
+      io.to(debate_id).emit('lifelines_update', newLifelines);
+    } catch (err) {
+      console.error('use_lifeline error:', err);
+      socket.emit('error', { message: 'Failed to use lifeline.' });
     }
   });
 

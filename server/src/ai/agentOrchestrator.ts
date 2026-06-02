@@ -1,18 +1,18 @@
 import { DebateRoom, Message, AIRole, Stance } from '../types/index.js';
 import { completion, FAST_MODEL } from './llmClient.js';
 import { runParticipant } from './agents/participant.js';
-import { runDevilsAdvocate } from './agents/devilsAdvocate.js';
 import { runInterrogator } from './agents/interrogator.js';
 import { runCoach } from './agents/coach.js';
-import { runSteelman } from './agents/steelman.js';
+import { runLifeline } from './agents/devilsAdvocate.js';
 import { runJudge } from './agents/judge.js';
 
-export { runJudge };
+export { runJudge, runLifeline };
 
 export interface AgentOutput {
   role: AIRole;
   content: string;
   targetStance?: Stance;
+  targetUserId?: string; // for private coach feedback to a specific sender
 }
 
 // Only these real, well-known fallacies may be flagged. This stops the
@@ -201,15 +201,8 @@ export async function orchestrateAgents(
     });
   }
 
-  if (roles.includes('devils_advocate')) {
-    publicAgents.push({
-      role: 'devils_advocate',
-      fn: () =>
-        runDevilsAdvocate(room, room.messages, room.momentum, chunk =>
-          onAgentMessage({ role: 'devils_advocate', content: '' }, chunk, false)
-        ),
-    });
-  }
+  // Note: Devil's Advocate no longer auto-posts — it is an on-demand
+  // lifeline (handled separately via the use_lifeline socket event).
 
   if (roles.includes('interrogator')) {
     publicAgents.push({
@@ -217,16 +210,6 @@ export async function orchestrateAgents(
       fn: () =>
         runInterrogator(room, lastMessage, chunk =>
           onAgentMessage({ role: 'interrogator', content: '' }, chunk, false)
-        ),
-    });
-  }
-
-  if (roles.includes('steelman')) {
-    publicAgents.push({
-      role: 'steelman',
-      fn: () =>
-        runSteelman(room, room.messages, room.momentum, chunk =>
-          onAgentMessage({ role: 'steelman', content: '' }, chunk, false)
         ),
     });
   }
@@ -247,13 +230,14 @@ export async function orchestrateAgents(
     if (i < publicAgents.length - 1) await gap(700);
   }
 
-  // Coach runs privately (not streamed publicly)
-  if (roles.includes('coach')) {
+  // Coach critiques HOW the sender phrased their own message (delivery
+  // feedback), and is sent privately back to that sender only.
+  if (roles.includes('coach') && !lastMessage.is_ai) {
     try {
-      const forCoach = await runCoach(room, room.messages, 'for');
-      const againstCoach = await runCoach(room, room.messages, 'against');
-      outputs.push({ role: 'coach', content: forCoach, targetStance: 'for' });
-      outputs.push({ role: 'coach', content: againstCoach, targetStance: 'against' });
+      const feedback = await runCoach(room, lastMessage);
+      if (feedback) {
+        outputs.push({ role: 'coach', content: feedback, targetUserId: lastMessage.sender_id });
+      }
     } catch (err) {
       console.error('Coach agent failed:', err);
     }

@@ -34,11 +34,8 @@ const FALLACY_EXPLANATIONS: Record<string, string> = {
 
 const AGENT_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
   participant:     { label: 'AI Participant',    color: '#818cf8', bg: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
-  devils_advocate: { label: "Devil's Advocate",  color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)' },
   interrogator:   { label: 'Interrogator',       color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)' },
-  steelman:       { label: 'Steelman',           color: '#34d399', bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)' },
   judge:          { label: 'Judge',              color: '#c084fc', bg: 'rgba(192,132,252,0.1)', border: 'rgba(192,132,252,0.25)' },
-  coach:          { label: 'Coach',              color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.25)' },
 };
 
 type Stage = 'pick-stance' | 'briefing' | 'active' | 'completed';
@@ -74,6 +71,10 @@ export default function DebateRoomPage() {
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [coachTip, setCoachTip] = useState('');
   const [fallacyAlerts, setFallacyAlerts] = useState<FallacyAlert[]>([]);
+  const [lifelines, setLifelines] = useState<{ for: number; against: number }>({ for: 3, against: 3 });
+  const [lifelineResult, setLifelineResult] = useState('');
+  const [lifelineLoading, setLifelineLoading] = useState(false);
+  const aiRolesRef = useRef<string[]>([]);
   const [topic, setTopic] = useState('');
   const [sharpenedTopic, setSharpenedTopic] = useState('');
   const [debateMode, setDebateMode] = useState<'solo' | '1v1' | 'group'>('solo');
@@ -125,12 +126,14 @@ export default function DebateRoomPage() {
     const socket = socketRef.current;
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
-    socket.on('error', ({ message }: { message: string }) => alert(message));
+    socket.on('error', ({ message }: { message: string }) => { setLifelineLoading(false); alert(message); });
 
-    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; mode?: 'solo' | '1v1' | 'group'; messages?: Message[]; momentum?: Momentum; participants?: { name: string; stance: string; is_ai?: boolean }[] } }) => {
+    socket.on('room_joined', ({ room }: { room: { topic: string; sharpened_topic: string; status: string; mode?: 'solo' | '1v1' | 'group'; messages?: Message[]; momentum?: Momentum; participants?: { name: string; stance: string; is_ai?: boolean }[]; lifelines?: { for: number; against: number }; ai_roles?: string[] } }) => {
       setTopic(room.topic);
       setSharpenedTopic(room.sharpened_topic || room.topic);
       if (room.mode) setDebateMode(room.mode);
+      if (room.lifelines) setLifelines(room.lifelines);
+      if (room.ai_roles) aiRolesRef.current = room.ai_roles;
       // Load any messages already in the room (for people who join mid-debate)
       if (room.messages && room.messages.length > 0) setMessages(room.messages);
       if (room.momentum) setMomentum(room.momentum);
@@ -175,7 +178,14 @@ export default function DebateRoomPage() {
 
     socket.on('coach_whisper', ({ content }: { content: string }) => {
       setCoachTip(content);
-      setTimeout(() => setCoachTip(''), 15000);
+      setTimeout(() => setCoachTip(''), 18000);
+    });
+
+    socket.on('lifelines_update', (l: { for: number; against: number }) => setLifelines(l));
+
+    socket.on('lifeline_result', ({ content }: { content: string; remaining: number }) => {
+      setLifelineResult(content);
+      setLifelineLoading(false);
     });
 
     socket.on('debate_started', () => setStage('active'));
@@ -185,7 +195,7 @@ export default function DebateRoomPage() {
 
     return () => {
       ['connect','disconnect','error','room_joined','participant_joined','new_message','ai_chunk','ai_message_complete',
-       'momentum_update','fallacy_detected','coach_whisper','debate_started','debate_ended']
+       'momentum_update','fallacy_detected','coach_whisper','lifelines_update','lifeline_result','debate_started','debate_ended']
         .forEach(e => socket.off(e));
       disconnectSocket();
     };
@@ -213,6 +223,13 @@ export default function DebateRoomPage() {
   };
 
   const endDebate = () => socketRef.current.emit('end_debate', { debate_id: debateId });
+
+  const useLifeline = () => {
+    if (lifelineLoading) return;
+    setLifelineResult('');
+    setLifelineLoading(true);
+    socketRef.current.emit('use_lifeline', { debate_id: debateId, stance });
+  };
 
   // Stop the mic explicitly (user click or after send)
   const stopVoice = () => {
@@ -734,8 +751,53 @@ export default function DebateRoomPage() {
           )}
 
           {/* INPUT */}
-          {stage === 'active' && !isSpectator && (
+          {stage === 'active' && !isSpectator && (() => {
+            const daEnabled = aiRolesRef.current.includes('devils_advocate');
+            const myLives = lifelines[stance === 'for' ? 'for' : 'against'];
+            const otherMomentum = stance === 'for' ? momentum.against : momentum.for;
+            const myMomentum = stance === 'for' ? momentum.for : momentum.against;
+            const humanMsgCount = messages.filter(m => !m.is_ai).length;
+            const amTrailing = myMomentum < otherMomentum;
+            const canUse = daEnabled && myLives > 0 && amTrailing && humanMsgCount >= 2 && !lifelineLoading;
+            return (
             <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '14px 16px', background: '#0d0d18' }}>
+
+              {/* Devil's Advocate lifeline (hearts) */}
+              {daEnabled && (
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 800, color: '#f87171', letterSpacing: '1px' }}>DEVIL&apos;S ADVOCATE</span>
+                    <span style={{ display: 'flex', gap: '3px' }}>
+                      {[0, 1, 2].map(i => (
+                        <span key={i} style={{ fontSize: '15px', filter: i < myLives ? 'none' : 'grayscale(1)', opacity: i < myLives ? 1 : 0.3 }}>
+                          {i < myLives ? '❤️' : '🖤'}
+                        </span>
+                      ))}
+                    </span>
+                    <button
+                      onClick={useLifeline}
+                      disabled={!canUse}
+                      title={!daEnabled ? '' : myLives <= 0 ? 'No lifelines left' : !amTrailing ? 'Only available when your side is behind' : humanMsgCount < 2 ? 'Unlocks once the debate is underway' : 'Get counter-arguments to fight back'}
+                      style={{ fontSize: '11px', fontWeight: 700, padding: '4px 12px', borderRadius: '999px', fontFamily: 'inherit', cursor: canUse ? 'pointer' : 'not-allowed',
+                        background: canUse ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${canUse ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                        color: canUse ? '#fca5a5' : '#4b5563' }}
+                    >
+                      {lifelineLoading ? 'Thinking...' : amTrailing ? 'Use lifeline to fight back' : myLives > 0 ? 'Available when behind' : 'No lifelines left'}
+                    </button>
+                  </div>
+                  {lifelineResult && (
+                    <div style={{ marginTop: '8px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '12px', padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#f87171', letterSpacing: '1px' }}>YOUR COUNTER-ARGUMENTS</span>
+                        <button onClick={() => setLifelineResult('')} style={{ fontSize: '11px', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>dismiss</button>
+                      </div>
+                      <p style={{ fontSize: '13px', color: '#fecaca', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{lifelineResult}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {coachTip && (
                 <div style={{ marginBottom: '10px', display: 'flex', gap: '10px', background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: '12px', padding: '10px 14px', alignItems: 'flex-start' }}>
                   <span style={{ fontSize: '10px', fontWeight: 800, color: '#fb923c', letterSpacing: '1.5px', flexShrink: 0, marginTop: '2px' }}>COACH</span>
@@ -771,7 +833,8 @@ export default function DebateRoomPage() {
                 <p style={{ fontSize: '12px', color: '#ef4444', marginTop: '8px', textAlign: 'center' }}>Listening... take your time. Click the mic to stop, or Send when ready.</p>
               )}
             </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* FALLACY SIDEBAR */}

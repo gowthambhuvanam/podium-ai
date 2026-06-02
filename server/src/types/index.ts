@@ -8,7 +8,6 @@ export type AIRole =
   | 'devils_advocate'
   | 'interrogator'
   | 'coach'
-  | 'steelman'
   | 'judge';
 
 export interface User {
@@ -56,6 +55,8 @@ export interface DebateRoom {
   created_by: string;
   created_at: string;
   momentum: { for: number; against: number };
+  // Devil's Advocate lifelines remaining per side (3 each, shared by the side)
+  lifelines: { for: number; against: number };
 }
 
 export interface PerformanceCard {

@@ -40,9 +40,9 @@ router.post('/create', async (req: Request, res: Response) => {
     // - 1v1: both sides are humans, so no AI Participant
     let safeRoles = Array.isArray(ai_roles) ? [...ai_roles] : [];
     if (mode === 'solo') {
-      // Devil's Advocate and Interrogator are redundant in solo — the AI
-      // participant already argues the opposite side and rebuts the human
-      safeRoles = safeRoles.filter(r => r !== 'devils_advocate' && r !== 'interrogator');
+      // Interrogator is redundant in solo — the AI participant already rebuts
+      // the human. Devil's Advocate stays: it is the human's lifeline.
+      safeRoles = safeRoles.filter(r => r !== 'interrogator');
       if (!safeRoles.includes('participant')) safeRoles.push('participant');
     } else if (mode === '1v1') {
       safeRoles = safeRoles.filter(r => r !== 'participant');
@@ -70,6 +70,7 @@ router.post('/create', async (req: Request, res: Response) => {
       created_by: user_id,
       created_at: new Date().toISOString(),
       momentum: { for: 50, against: 50 },
+      lifelines: { for: 3, against: 3 },
     };
 
     // Store in memory

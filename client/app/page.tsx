@@ -4,16 +4,15 @@ import { useRouter } from 'next/navigation';
 
 const agents = [
   { name: 'Participant', desc: 'Debates as an active member on one side', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.25)' },
-  { name: "Devil's Advocate", desc: 'Challenges whichever side is winning', color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)' },
-  { name: 'Interrogator', desc: 'Only asks sharp probing questions', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
-  { name: 'Coach', desc: 'Whispers private tactics to your side only', color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.25)' },
-  { name: 'Steelman', desc: 'Builds the strongest version of weak arguments', color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.25)' },
+  { name: 'Coach', desc: 'Private feedback on how you phrased your point', color: '#fb923c', bg: 'rgba(251,146,60,0.08)', border: 'rgba(251,146,60,0.25)' },
+  { name: "Devil's Advocate", desc: 'Three lifelines for the losing side to fight back', color: '#f87171', bg: 'rgba(248,113,113,0.08)', border: 'rgba(248,113,113,0.25)' },
+  { name: 'Interrogator', desc: 'Asks sharp Socratic questions', color: '#fbbf24', bg: 'rgba(251,191,36,0.08)', border: 'rgba(251,191,36,0.25)' },
   { name: 'Judge', desc: 'Silent observer. Delivers the final verdict.', color: '#c084fc', bg: 'rgba(192,132,252,0.08)', border: 'rgba(192,132,252,0.25)' },
 ];
 
 const steps = [
   { num: '01', title: 'Set the stage', desc: 'Enter any topic. AI sharpens it and predicts how the room will lean.' },
-  { num: '02', title: 'Pick your agents', desc: 'Choose one or all six AI roles. Each runs simultaneously with its own job.' },
+  { num: '02', title: 'Pick your agents', desc: 'Choose one or all five AI roles. Each runs simultaneously with its own job.' },
   { num: '03', title: 'Debate live', desc: 'Arguments analyzed in real time. Fallacies flagged. Momentum tracked.' },
   { num: '04', title: 'Get your verdict', desc: 'Full performance breakdown — who won, why, what you missed.' },
 ];
@@ -60,7 +59,7 @@ export default function HomePage() {
           </h1>
 
           <p style={{ fontSize: '18px', color: '#6b7280', maxWidth: '560px', margin: '0 auto 40px', lineHeight: 1.7 }}>
-            Real-time AI debate with six simultaneous agents — arguing, coaching, interrogating, and judging. Solo, 1v1, or up to 10 people.
+            Real-time AI debate with five simultaneous agents that argue, coach, interrogate, and judge. Solo, 1v1, or up to 10 people.
           </p>
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '64px' }}>
@@ -80,7 +79,7 @@ export default function HomePage() {
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', maxWidth: '560px', margin: '0 auto' }}>
-            {[['3', 'Debate Modes'], ['6', 'AI Agents'], ['10', 'Max Players'], ['100%', 'Real-time']].map(([val, label]) => (
+            {[['3', 'Debate Modes'], ['5', 'AI Agents'], ['10', 'Max Players'], ['100%', 'Real-time']].map(([val, label]) => (
               <div key={label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', padding: '16px 8px', textAlign: 'center' }}>
                 <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{val}</div>
                 <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px', fontWeight: 500 }}>{label}</div>
@@ -94,7 +93,7 @@ export default function HomePage() {
       <section style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <p style={{ fontSize: '11px', fontWeight: 700, color: '#6366f1', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>Six AI Roles</p>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#6366f1', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>Five AI Roles</p>
             <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, letterSpacing: '-2px', color: '#fff' }}>Your AI Debate Squad</h2>
             <p style={{ color: '#4b5563', marginTop: '12px', fontSize: '15px' }}>Select one or combine all six. Each runs simultaneously with its own job.</p>
           </div>

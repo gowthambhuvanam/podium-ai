@@ -18,15 +18,14 @@ const MODES: { id: Mode; label: string; sub: string }[] = [
 
 const AI_ROLES = [
   { id: 'participant', label: 'Participant', desc: 'AI debates as your opponent', color: '#818cf8', activeBg: 'rgba(129,140,248,0.12)', activeBorder: 'rgba(129,140,248,0.4)' },
-  { id: 'devils_advocate', label: "Devil's Advocate", desc: 'Challenges whichever side is winning', color: '#f87171', activeBg: 'rgba(248,113,113,0.12)', activeBorder: 'rgba(248,113,113,0.4)' },
+  { id: 'coach', label: 'Coach (helps you)', desc: 'Feedback on how you phrased your point', color: '#fb923c', activeBg: 'rgba(251,146,60,0.12)', activeBorder: 'rgba(251,146,60,0.4)' },
+  { id: 'devils_advocate', label: "Devil's Advocate", desc: '3 lifelines for the losing side', color: '#f87171', activeBg: 'rgba(248,113,113,0.12)', activeBorder: 'rgba(248,113,113,0.4)' },
   { id: 'interrogator', label: 'Interrogator', desc: 'Asks probing questions to everyone', color: '#fbbf24', activeBg: 'rgba(251,191,36,0.12)', activeBorder: 'rgba(251,191,36,0.4)' },
-  { id: 'coach', label: 'Coach (helps you)', desc: 'Private tactical tips for your side', color: '#fb923c', activeBg: 'rgba(251,146,60,0.12)', activeBorder: 'rgba(251,146,60,0.4)' },
-  { id: 'steelman', label: 'Steelman (helps you)', desc: 'Strengthens the weakest argument', color: '#34d399', activeBg: 'rgba(52,211,153,0.12)', activeBorder: 'rgba(52,211,153,0.4)' },
   { id: 'judge', label: 'Judge', desc: 'Silent observer — final verdict', color: '#c084fc', activeBg: 'rgba(192,132,252,0.12)', activeBorder: 'rgba(192,132,252,0.4)' },
 ];
 
 const SKILL_LEVELS: { id: Skill; label: string; sub: string }[] = [
-  { id: 'beginner', label: 'Beginner', sub: 'Coach + Steelman on' },
+  { id: 'beginner', label: 'Beginner', sub: 'Coach on by default' },
   { id: 'intermediate', label: 'Intermediate', sub: 'Balanced challenge' },
   { id: 'expert', label: 'Expert', sub: 'No aids, no mercy' },
 ];
@@ -36,7 +35,6 @@ type RoleState = 'required' | 'available' | 'disabled';
 function roleStatus(roleId: string, mode: Mode): { state: RoleState; reason?: string } {
   if (mode === 'solo') {
     if (roleId === 'participant') return { state: 'required', reason: 'The AI must be your opponent in Solo mode' };
-    if (roleId === 'devils_advocate') return { state: 'disabled', reason: 'Redundant in Solo — the AI participant already argues the opposing side' };
     if (roleId === 'interrogator') return { state: 'disabled', reason: 'Not needed in Solo — the AI participant already rebuts and pushes back on you' };
     return { state: 'available' };
   }
@@ -52,7 +50,7 @@ function defaultRoles(mode: Mode, skill: Skill): string[] {
   const roles = new Set<string>();
   if (mode === 'solo') roles.add('participant'); // required
   roles.add('judge');
-  if (skill === 'beginner') { roles.add('coach'); roles.add('steelman'); }
+  if (skill === 'beginner') roles.add('coach');
   return AI_ROLES.map(r => r.id).filter(id => roles.has(id) && roleStatus(id, mode).state !== 'disabled');
 }
 
@@ -110,8 +108,8 @@ export default function CreateDebatePage() {
     setSkillLevel(s);
     setAiRoles(prev => {
       const next = new Set(prev);
-      if (s === 'beginner') { next.add('coach'); next.add('steelman'); }
-      if (s === 'expert') { next.delete('coach'); next.delete('steelman'); }
+      if (s === 'beginner') next.add('coach');
+      if (s === 'expert') next.delete('coach');
       // keep required roles for current mode
       AI_ROLES.forEach(r => { if (roleStatus(r.id, mode).state === 'required') next.add(r.id); });
       return Array.from(next).filter(id => roleStatus(id, mode).state !== 'disabled');
