@@ -14,7 +14,7 @@ const steps = [
   { num: '01', title: 'Set the stage', desc: 'Enter any topic. AI sharpens it and predicts how the room will lean.' },
   { num: '02', title: 'Pick your agents', desc: 'Choose one or all five AI roles. Each runs simultaneously with its own job.' },
   { num: '03', title: 'Debate live', desc: 'Arguments analyzed in real time. Fallacies flagged. Momentum tracked.' },
-  { num: '04', title: 'Get your verdict', desc: 'Full performance breakdown — who won, why, what you missed.' },
+  { num: '04', title: 'Get your verdict', desc: 'Full performance breakdown: who won, why, and what you missed.' },
 ];
 
 export default function HomePage() {

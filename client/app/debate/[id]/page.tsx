@@ -366,7 +366,7 @@ export default function DebateRoomPage() {
     <div style={{ flexShrink: 0, background: '#0d0d18', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Top row: label + status */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px 6px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 800, color: '#4b5563', letterSpacing: '2px' }}>MOMENTUM — who is winning the room</span>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#4b5563', letterSpacing: '2px' }}>MOMENTUM: who is winning the room</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: connected ? '#22c55e' : '#ef4444', display: 'inline-block' }} />
           {isSpectator ? (
@@ -482,8 +482,8 @@ export default function DebateRoomPage() {
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
                 <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', fontWeight: 600 }}>
                   {debateMode === '1v1'
-                    ? 'Invite your opponent — share this link. They pick their side and join.'
-                    : `Invite participants — share this link. Up to ${10 - joinedCount} more can join (10 max).`}
+                    ? 'Invite your opponent. Share this link and they pick their side and join.'
+                    : `Invite participants. Share this link, up to ${10 - joinedCount} more can join (10 max).`}
                 </p>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input readOnly value={roomLink}
@@ -528,7 +528,7 @@ export default function DebateRoomPage() {
             {/* Spectator link — anyone can watch (supervisor / teacher / audience) */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
               <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '10px', fontWeight: 600 }}>
-                Spectator link — share with anyone who should just watch (no limit)
+                Spectator link. Share with anyone who should just watch (no limit)
               </p>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input readOnly value={roomLink + `?role=spectator&name=Spectator&user_id=guest`}
@@ -680,7 +680,7 @@ export default function DebateRoomPage() {
             {messages.length === 0 && stage === 'active' && (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <p style={{ color: '#374151', fontSize: '14px' }}>
-                  {isSpectator ? 'Waiting for the debate to begin... arguments will appear here live.' : 'Make the first argument — the debate is live.'}
+                  {isSpectator ? 'Waiting for the debate to begin... arguments will appear here live.' : 'Make the first argument. The debate is live.'}
                 </p>
               </div>
             )}
@@ -745,7 +745,7 @@ export default function DebateRoomPage() {
           {stage === 'active' && isSpectator && (
             <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)', padding: '14px 16px', background: '#0d0d18', textAlign: 'center' }}>
               <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                <span style={{ color: '#a5b4fc', fontWeight: 700 }}>Spectator mode</span> — you are watching this debate live. You cannot send messages.
+                <span style={{ color: '#a5b4fc', fontWeight: 700 }}>Spectator mode.</span> You are watching this debate live. You cannot send messages.
               </p>
             </div>
           )}

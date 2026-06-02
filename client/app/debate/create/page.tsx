@@ -21,7 +21,7 @@ const AI_ROLES = [
   { id: 'coach', label: 'Coach (helps you)', desc: 'Feedback on how you phrased your point', color: '#fb923c', activeBg: 'rgba(251,146,60,0.12)', activeBorder: 'rgba(251,146,60,0.4)' },
   { id: 'devils_advocate', label: "Devil's Advocate", desc: '3 lifelines for the losing side', color: '#f87171', activeBg: 'rgba(248,113,113,0.12)', activeBorder: 'rgba(248,113,113,0.4)' },
   { id: 'interrogator', label: 'Interrogator', desc: 'Asks probing questions to everyone', color: '#fbbf24', activeBg: 'rgba(251,191,36,0.12)', activeBorder: 'rgba(251,191,36,0.4)' },
-  { id: 'judge', label: 'Judge', desc: 'Silent observer — final verdict', color: '#c084fc', activeBg: 'rgba(192,132,252,0.12)', activeBorder: 'rgba(192,132,252,0.4)' },
+  { id: 'judge', label: 'Judge', desc: 'Silent observer, final verdict', color: '#c084fc', activeBg: 'rgba(192,132,252,0.12)', activeBorder: 'rgba(192,132,252,0.4)' },
 ];
 
 const SKILL_LEVELS: { id: Skill; label: string; sub: string }[] = [
@@ -35,11 +35,11 @@ type RoleState = 'required' | 'available' | 'disabled';
 function roleStatus(roleId: string, mode: Mode): { state: RoleState; reason?: string } {
   if (mode === 'solo') {
     if (roleId === 'participant') return { state: 'required', reason: 'The AI must be your opponent in Solo mode' };
-    if (roleId === 'interrogator') return { state: 'disabled', reason: 'Not needed in Solo — the AI participant already rebuts and pushes back on you' };
+    if (roleId === 'interrogator') return { state: 'disabled', reason: 'Not needed in Solo. The AI participant already rebuts and pushes back on you' };
     return { state: 'available' };
   }
   if (mode === '1v1') {
-    if (roleId === 'participant') return { state: 'disabled', reason: 'Both sides are humans in 1v1 — no AI debater' };
+    if (roleId === 'participant') return { state: 'disabled', reason: 'Both sides are humans in 1v1, so no AI debater' };
     return { state: 'available' };
   }
   return { state: 'available' }; // group: everything allowed

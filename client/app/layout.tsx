@@ -5,7 +5,7 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
 
 export const metadata: Metadata = {
-  title: "Podium — AI Debate Platform",
+  title: "Podium: AI Debate Platform",
   description: "Real-time AI debate platform with multi-agent intelligence. Solo, 1v1, and group debates with live fallacy detection, coaching, and performance analysis.",
 };
 
