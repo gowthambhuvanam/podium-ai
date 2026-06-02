@@ -75,8 +75,8 @@ router.post('/create', async (req: Request, res: Response) => {
     // Store in memory
     createRoom(room);
 
-    // Store in Supabase
-    await supabase.from('debates').insert({
+    // Store in Supabase (log any error so silent failures are visible)
+    const { error: insertError } = await supabase.from('debates').insert({
       id: debate_id,
       topic,
       sharpened_topic,
@@ -87,6 +87,7 @@ router.post('/create', async (req: Request, res: Response) => {
       created_by: user_id,
       created_at: new Date().toISOString(),
     });
+    if (insertError) console.error('Failed to save debate to DB:', insertError.message);
 
     return res.json({
       debate_id,

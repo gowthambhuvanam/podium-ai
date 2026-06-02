@@ -12,6 +12,20 @@ export async function signUp(email: string, password: string, name: string) {
     options: { data: { name } },
   });
   if (error) throw error;
+
+  // Create the profile row so credits and debate history work
+  if (data.user) {
+    await supabase.from('users').upsert(
+      {
+        id: data.user.id,
+        email,
+        name,
+        skill_level: 'intermediate',
+        credits_balance: 10,
+      },
+      { onConflict: 'id' }
+    );
+  }
   return data;
 }
 

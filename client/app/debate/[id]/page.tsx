@@ -204,8 +204,18 @@ export default function DebateRoomPage() {
   // Stop the mic explicitly (user click or after send)
   const stopVoice = () => {
     listeningRef.current = false;
-    recognitionRef.current?.stop();
+    const rec = recognitionRef.current;
+    if (rec) {
+      // Detach handlers FIRST so a trailing result event cannot repopulate
+      // the box after we have cleared/sent it
+      rec.onresult = null;
+      rec.onend = null;
+      rec.onerror = null;
+      try { rec.stop(); } catch { /* already stopped */ }
+    }
     recognitionRef.current = null;
+    finalTranscriptRef.current = '';
+    baseTextRef.current = '';
     setIsListening(false);
   };
 
