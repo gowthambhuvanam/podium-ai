@@ -16,15 +16,30 @@ const httpServer = createServer(app);
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
+// Allow localhost (dev), the configured client URL, and any Vercel domain
+// (production + preview deployments have changing *.vercel.app URLs)
+const isAllowedOrigin = (origin?: string): boolean => {
+  if (!origin) return true; // non-browser / same-origin requests
+  if (origin === 'http://localhost:3000') return true;
+  if (origin === CLIENT_URL) return true;
+  if (origin.endsWith('.vercel.app')) return true;
+  return false;
+};
+
+const corsOrigin = (
+  origin: string | undefined,
+  cb: (err: Error | null, allow?: boolean) => void
+) => cb(null, isAllowedOrigin(origin));
+
 const io = new Server(httpServer, {
   cors: {
-    origin: [CLIENT_URL, 'http://localhost:3000'],
+    origin: corsOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },
 });
 
-app.use(cors({ origin: [CLIENT_URL, 'http://localhost:3000'], credentials: true }));
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(express.json());
 
 // Routes
