@@ -115,12 +115,19 @@ export default function HomePage() {
             <p style={{ fontSize: '11px', fontWeight: 700, color: '#6366f1', letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '12px' }}>How it works</p>
             <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 900, letterSpacing: '-2px', color: '#fff' }}>From Topic to Verdict</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '14px' }}>
             {steps.map(s => (
-              <div key={s.num} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '18px', padding: '28px' }}>
-                <span style={{ fontSize: '48px', fontWeight: 900, color: 'rgba(255,255,255,0.05)', lineHeight: 1, display: 'block', marginBottom: '16px' }}>{s.num}</span>
-                <h3 style={{ fontWeight: 800, fontSize: '17px', color: '#fff', marginBottom: '8px' }}>{s.title}</h3>
-                <p style={{ fontSize: '13px', color: '#4b5563', lineHeight: 1.7 }}>{s.desc}</p>
+              <div key={s.num} style={{ position: 'relative', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '28px', overflow: 'hidden' }}>
+                {/* Big faint watermark number (now actually visible) */}
+                <span style={{ position: 'absolute', top: '8px', right: '20px', fontSize: '88px', fontWeight: 900, color: 'rgba(129,140,248,0.10)', lineHeight: 1, pointerEvents: 'none' }}>{s.num}</span>
+
+                {/* Crisp number badge */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', fontSize: '16px', fontWeight: 900, marginBottom: '18px', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
+                  {s.num}
+                </div>
+
+                <h3 style={{ position: 'relative', fontWeight: 800, fontSize: '18px', color: '#fff', marginBottom: '8px' }}>{s.title}</h3>
+                <p style={{ position: 'relative', fontSize: '13.5px', color: '#9ca3af', lineHeight: 1.7 }}>{s.desc}</p>
               </div>
             ))}
           </div>
