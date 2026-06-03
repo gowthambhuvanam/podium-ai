@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signUp } from '@/lib/supabase';
+import { PodiumMark } from '@/components/Logo';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -40,7 +41,10 @@ export default function SignUpPage() {
       <div style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
         {/* Logo */}
         <button onClick={() => router.push('/')} style={{ display: 'block', width: '100%', textAlign: 'center', marginBottom: '32px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-          <span style={{ fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>PODIUM</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
+            <PodiumMark size={28} />
+            <span style={{ fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>PODIUM</span>
+          </span>
         </button>
 
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px' }}>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createDebate, suggestTopics } from '@/lib/api';
 import { getSession } from '@/lib/supabase';
+import { PodiumMark } from '@/components/Logo';
 
 const CATEGORIES = ['Technology', 'Business', 'Ethics', 'Society', 'Science', 'Politics', 'Education', 'Health', 'Environment', 'Sports'];
 
@@ -146,7 +147,10 @@ export default function CreateDebatePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#09090f', color: '#fff' }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 24px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(9,9,15,0.95)' }}>
-        <button onClick={() => router.push('/')} style={{ fontSize: '18px', fontWeight: 900, color: '#fff', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '-0.5px' }}>PODIUM</button>
+        <button onClick={() => router.push('/')} style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <PodiumMark size={24} />
+          <span style={{ fontSize: '18px', fontWeight: 900, color: '#fff', letterSpacing: '-0.5px' }}>PODIUM</span>
+        </button>
         <span style={{ fontSize: '11px', fontWeight: 700, color: '#374151', letterSpacing: '2px', textTransform: 'uppercase' }}>New Debate</span>
       </div>
 

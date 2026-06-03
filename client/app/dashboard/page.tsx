@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession, signOut } from '@/lib/supabase';
 import { getDebateHistory, getCreditBalance } from '@/lib/api';
+import { PodiumMark } from '@/components/Logo';
 
 interface Debate {
   id: string;
@@ -70,7 +71,10 @@ export default function DashboardPage() {
     <div style={{ minHeight: '100vh', background: '#09090f', color: '#fff' }}>
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 24px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0d0d18' }}>
-        <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px' }}>PODIUM</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '9px' }}>
+          <PodiumMark size={24} />
+          <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>PODIUM</span>
+        </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <span style={{ fontSize: '14px', color: '#9ca3af' }}>{userName}</span>
           <button onClick={handleSignOut} style={{ fontSize: '12px', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>

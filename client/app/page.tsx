@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { Brand, PodiumMark } from '@/components/Logo';
 
 const agents = [
   { name: 'Participant', desc: 'Debates as an active member on one side', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.25)' },
@@ -25,7 +26,7 @@ export default function HomePage() {
 
       {/* NAV */}
       <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 32px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'rgba(9,9,15,0.95)', backdropFilter: 'blur(12px)', zIndex: 100 }}>
-        <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>PODIUM</span>
+        <Brand size={18} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button onClick={() => router.push('/auth/login')} style={{ padding: '8px 16px', fontSize: '13px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
             Sign in
@@ -159,7 +160,10 @@ export default function HomePage() {
 
       {/* FOOTER */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '16px', fontWeight: 900, color: 'rgba(255,255,255,0.2)' }}>PODIUM</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', opacity: 0.4 }}>
+          <PodiumMark size={18} />
+          <span style={{ fontSize: '16px', fontWeight: 900, color: '#fff' }}>PODIUM</span>
+        </span>
         <p style={{ fontSize: '12px', color: '#1f2937' }}>AI analysis only. Not affiliated with any institution.</p>
       </footer>
 

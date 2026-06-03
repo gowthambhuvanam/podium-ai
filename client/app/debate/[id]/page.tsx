@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
 import { getBriefing } from '@/lib/api';
+import { PodiumMark } from '@/components/Logo';
 
 interface Message {
   id: string;
@@ -563,7 +564,10 @@ export default function DebateRoomPage() {
       <div style={{ minHeight: '100vh', background: '#09090f', color: '#fff' }}>
         {/* Slim top bar */}
         <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 24px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0d0d18' }}>
-          <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px' }}>PODIUM</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '9px' }}>
+            <PodiumMark size={24} />
+            <span style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '-0.5px', color: '#fff' }}>PODIUM</span>
+          </span>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button onClick={() => router.push('/debate/create')} style={{ fontSize: '13px', fontWeight: 700, color: '#fff', background: '#6366f1', border: 'none', borderRadius: '10px', padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>New Debate</button>
             <button onClick={() => router.push('/dashboard')} style={{ fontSize: '13px', color: '#9ca3af', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit' }}>Dashboard</button>
