@@ -117,17 +117,14 @@ export default function HomePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '14px' }}>
             {steps.map(s => (
-              <div key={s.num} style={{ position: 'relative', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '28px', overflow: 'hidden' }}>
-                {/* Big faint watermark number (now actually visible) */}
-                <span style={{ position: 'absolute', top: '8px', right: '20px', fontSize: '88px', fontWeight: 900, color: 'rgba(129,140,248,0.10)', lineHeight: 1, pointerEvents: 'none' }}>{s.num}</span>
-
-                {/* Crisp number badge */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', fontSize: '16px', fontWeight: 900, marginBottom: '18px', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
+              <div key={s.num} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '28px' }}>
+                {/* Single crisp number badge */}
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: '#fff', fontSize: '17px', fontWeight: 900, marginBottom: '18px', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}>
                   {s.num}
                 </div>
 
-                <h3 style={{ position: 'relative', fontWeight: 800, fontSize: '18px', color: '#fff', marginBottom: '8px' }}>{s.title}</h3>
-                <p style={{ position: 'relative', fontSize: '13.5px', color: '#9ca3af', lineHeight: 1.7 }}>{s.desc}</p>
+                <h3 style={{ fontWeight: 800, fontSize: '18px', color: '#fff', marginBottom: '8px' }}>{s.title}</h3>
+                <p style={{ fontSize: '13.5px', color: '#9ca3af', lineHeight: 1.7 }}>{s.desc}</p>
               </div>
             ))}
           </div>
